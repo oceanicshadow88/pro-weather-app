@@ -6,7 +6,7 @@ import Header from '../../components/Header/Header';
 import BackGround from '../../components/BackGround';
 import '../../App.css';
 import { connect } from 'react-redux';
-import { getWeather } from '../../api/weatherapi';
+import { getWeather, convertWeatherData } from '../../api/weatherapi';
 import LoaderWeather from '../../components/LoaderWeather/LoaderWeather';
 
 class Weather extends React.Component {
@@ -28,8 +28,8 @@ class Weather extends React.Component {
       const q = e.target.value.toLowerCase();
       getWeather(q)
         .then((response) => {
-          response.data.daily.data = response.data.daily.data.splice(0, 5);
-          this.setState({ data: response.data, isLoaded: true, error: false, searchKey: q });
+          const convertedData = convertWeatherData(response.data);
+          this.setState({ data: convertedData, isLoaded: true, error: false, searchKey: q });
         })
         .catch((error) => {
           this.setState({ temp: 'Error', isLoaded: true, error: true });
@@ -38,9 +38,13 @@ class Weather extends React.Component {
   };
 
   async loadDefaultData() {
-    const result = await getWeather(this.props.city);
-    result.data.daily.data = result.data.daily.data.splice(0, 5);
-    this.setState({ data: result.data, isLoaded: true, error: false });
+    try {
+      const result = await getWeather(this.props.city);
+      const convertedData = convertWeatherData(result.data);
+      this.setState({ data: convertedData, isLoaded: true, error: false });
+    } catch (error) {
+      this.setState({ temp: 'Error', isLoaded: true, error: true });
+    }
   }
 
   render() {

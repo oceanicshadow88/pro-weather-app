@@ -31,8 +31,8 @@ class App extends React.Component {
         <Route path="/reset-password/:token" exact component={Reset} />
         <Route path="/forgot" exact component={Forgot} />
         <Route path="/sign-up" exact component={SignUp} />
-        <ProtectedRoute path="/dashboard" exact component={Weather} />
-        <ProtectedRoute path="/settings" exact component={Settings} />
+        <Route path="/dashboard" exact component={Weather} />
+        <Route path="/settings" exact component={Settings} />
         <Route path="/logout" exact component={Logout} />
         <Route path="/login" component={Login} />
         <Route component={NotFound} />

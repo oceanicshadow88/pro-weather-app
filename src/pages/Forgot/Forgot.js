@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './Forgot.css';
 import DynamicWeather from '../../components/DynamicWeather/DynamicWeather';
-import { getWeather } from '../../api/weatherapi';
+import { getWeather, convertWeatherData } from '../../api/weatherapi';
 import { forgotPassword } from '../../api/user';
 import Form from '../../components/Form/Form/Form';
 import FormContainer from '../../components/Container/FormContainer/FormContainer';
@@ -50,9 +50,13 @@ class Forgot extends React.Component {
   };
 
   async loadDefaultData() {
-    const result = await getWeather('sydney');
-    result.data.daily.data = result.data.daily.data.splice(0, 5);
-    this.setState({ data: result.data, loading: true, error: false });
+    try {
+      const result = await getWeather('sydney');
+      const convertedData = convertWeatherData(result.data);
+      this.setState({ data: convertedData, loading: false, error: false });
+    } catch (error) {
+      this.setState({ loading: false, error: true });
+    }
   }
 
   render() {
