@@ -1,4 +1,5 @@
-*::after, *::before {
+*::after,
+*::before {
     box-sizing: inherit;
     margin: 0;
     padding: 0;
@@ -11,11 +12,13 @@ body {
     background-color: white;
 }
 
-.Weather, .root, body {
+.DashboardPage,
+.root,
+body {
     height: 100%;
 }
 
-.Weather {
+.DashboardPage {
     text-align: center;
     border-top: 1px solid;
     height: 100vh;
@@ -55,7 +58,9 @@ body {
     position: relative;
 }
 
-.detail-info-container p, detail-info-container a, detail-info-container i {
+.detail-info-container p,
+detail-info-container a,
+detail-info-container i {
     padding: 0;
     margin: 0;
 }
@@ -73,7 +78,10 @@ body {
     min-height: 487px;
 }
 
-a:visited, a:focus, a:active, a {
+a:visited,
+a:focus,
+a:active,
+a {
     text-decoration: none !important;
 
 }
@@ -124,17 +132,19 @@ a:visited, a:focus, a:active, a {
     left: 1.5em;
 }
 
-.Weather > .loader {
+.DashboardPage>.loader {
     top: 200px;
 }
 
 @-webkit-keyframes load1 {
+
     0%,
     80%,
     100% {
         box-shadow: 0 0;
         height: 4em;
     }
+
     40% {
         box-shadow: 0 -2em;
         height: 5em;
@@ -142,12 +152,14 @@ a:visited, a:focus, a:active, a {
 }
 
 @keyframes load1 {
+
     0%,
     80%,
     100% {
         box-shadow: 0 0;
         height: 4em;
     }
+
     40% {
         box-shadow: 0 -2em;
         height: 5em;
@@ -177,18 +189,22 @@ a:visited, a:focus, a:active, a {
 }
 
 @media only screen and (max-width: 830px) {
-    .Weather, .root {
+
+    .DashboardPage,
+    .root {
         position: relative;
         min-height: 1300px;
     }
 
-    .Weather {
+    .DashboardPage {
         padding-bottom: 30px;
         height: unset;
 
     }
 
-    .card__social-media, .card__weather, .card__temperature {
+    .card__social-media,
+    .card__weather,
+    .card__temperature {
         width: 100% !important;
     }
 
@@ -211,7 +227,9 @@ a:visited, a:focus, a:active, a {
 }
 
 @media only screen and (max-width: 425px) {
-    .Weather, .root {
+
+    .DashboardPage,
+    .root {
         min-height: 1600px;
     }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import './TodayWeatherCard.css';
-import DynamicWeather from '../../DynamicWeather/DynamicWeather';
+import DynamicWeather from '../DynamicWeather/DynamicWeather';
 
 class TodayWeatherCard extends React.Component {
     constructor(props) {
