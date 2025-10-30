@@ -1,0 +1,217 @@
+*::after, *::before {
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+}
+
+/* Why still grey even out the body */
+body {
+    box-sizing: border-box;
+    font-family: sans-serif;
+    background-color: white;
+}
+
+.Weather, .root, body {
+    height: 100%;
+}
+
+.Weather {
+    text-align: center;
+    border-top: 1px solid;
+    height: 100vh;
+    min-height: 800px;
+    display: flex;
+    align-items: center;
+}
+
+.App-logo {
+    height: 40vmin;
+}
+
+.App-header {
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
+}
+
+.App-link {
+    color: #09d3ac;
+}
+
+/**************************/
+/** don't know how to name these tgings */
+.profile {
+    font-size: 70px;
+    margin-right: 20px;
+}
+
+.detail-info-container {
+    padding: 50px 0px 30px 40px;
+    position: relative;
+}
+
+.detail-info-container p, detail-info-container a, detail-info-container i {
+    padding: 0;
+    margin: 0;
+}
+
+/**************************/
+
+.card__main {
+    width: 100%;
+    max-width: 980px;
+    margin: auto;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 19px 38px rgba(0, 0, 0, 0.30), 0 15px 12px rgba(0, 0, 0, 0.22);
+    margin: 60px auto 0 auto;
+    min-height: 487px;
+}
+
+a:visited, a:focus, a:active, a {
+    text-decoration: none !important;
+
+}
+
+.btn:visited {
+    color: white;
+    text-decoration: none;
+
+}
+
+.loader,
+.loader:before,
+.loader:after {
+    background: #ffffff;
+    -webkit-animation: load1 1s infinite ease-in-out;
+    animation: load1 1s infinite ease-in-out;
+    width: 1em;
+    height: 4em;
+}
+
+.loader {
+    color: #ffffff;
+    text-indent: -9999em;
+    margin: 88px auto;
+    position: relative;
+    font-size: 11px;
+    -webkit-transform: translateZ(0);
+    -ms-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-animation-delay: -0.16s;
+    animation-delay: -0.16s;
+}
+
+.loader:before,
+.loader:after {
+    position: absolute;
+    top: 0;
+    content: '';
+}
+
+.loader:before {
+    left: -1.5em;
+    -webkit-animation-delay: -0.32s;
+    animation-delay: -0.32s;
+}
+
+.loader:after {
+    left: 1.5em;
+}
+
+.Weather > .loader {
+    top: 200px;
+}
+
+@-webkit-keyframes load1 {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0;
+        height: 4em;
+    }
+    40% {
+        box-shadow: 0 -2em;
+        height: 5em;
+    }
+}
+
+@keyframes load1 {
+    0%,
+    80%,
+    100% {
+        box-shadow: 0 0;
+        height: 4em;
+    }
+    40% {
+        box-shadow: 0 -2em;
+        height: 5em;
+    }
+}
+
+@media only screen and (max-width: 1680px) {
+    .detail-info-container {
+        padding: 20px 0px 20px 30px;
+        position: relative;
+    }
+
+}
+
+@media only screen and (max-width: 1024px) {
+    .card__main {
+        width: 90%;
+    }
+}
+
+@media only screen and (max-width: 880px) {
+    .card__header-img {
+        width: auto;
+        height: 100%;
+    }
+
+}
+
+@media only screen and (max-width: 830px) {
+    .Weather, .root {
+        position: relative;
+        min-height: 1300px;
+    }
+
+    .Weather {
+        padding-bottom: 30px;
+        height: unset;
+
+    }
+
+    .card__social-media, .card__weather, .card__temperature {
+        width: 100% !important;
+    }
+
+    .icon {
+        display: none;
+    }
+
+    .detail-info-container {
+        padding: 50px 20px;
+    }
+
+    .card__main {
+        width: 90%;
+    }
+
+    .App {
+        padding: 50px 0 50px 0;
+        position: relative;
+    }
+}
+
+@media only screen and (max-width: 425px) {
+    .Weather, .root {
+        min-height: 1600px;
+    }
+}

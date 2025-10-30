@@ -3,7 +3,7 @@ import './App.css';
 import { Route, withRouter, Switch } from 'react-router-dom';
 import { loadReCaptcha } from 'react-recaptcha-google';
 import { connect } from 'react-redux';
-import Weather from './pages/Weather/Weather';
+import DashboardPage from './pages/DashboardPage/DashboardPage';
 import Settings from './pages/Settings/Settings';
 import Logout from './containers/Auth/Logout/Logout';
 import * as action from './store/actions';
@@ -31,7 +31,7 @@ class App extends React.Component {
         <Route path="/reset-password/:token" exact component={Reset} />
         <Route path="/forgot" exact component={Forgot} />
         <Route path="/sign-up" exact component={SignUp} />
-        <Route path="/dashboard" exact component={Weather} />
+        <Route path="/dashboard" exact component={DashboardPage} />
         <Route path="/settings" exact component={Settings} />
         <Route path="/logout" exact component={Logout} />
         <Route path="/login" component={Login} />
