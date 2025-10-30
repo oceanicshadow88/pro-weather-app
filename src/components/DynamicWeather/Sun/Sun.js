@@ -1,18 +1,18 @@
 class Sun {
-  constructor(canvas, context, y) {
+  constructor(canvas, context, x, y) {
     this.canvas = canvas;
     this.context = context;
+    this.x = x;
     this.y = y;
-    this.yVelocity = 5;
-    this.moonRadius = 50;
-    this.x = canvas.width / 2; // Center horizontally
+    this.moonRadius = 30;
+  }
+
+  updatePosition(x, y) {
+    this.x = x;
+    this.y = y;
   }
 
   draw = function () {
-    if (this.y > 0) {
-      this.y -= this.yVelocity;
-    }
-
     const centerX = this.x;
     const centerY = this.y;
 

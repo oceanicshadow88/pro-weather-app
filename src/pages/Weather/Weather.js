@@ -1,7 +1,7 @@
 import React from 'react';
 import './Weather.css';
 
-import Cards from '../../components/Card/Cards';
+import Main from '../../components/Card/Main';
 import Header from '../../components/Header/Header';
 import BackGround from '../../components/BackGround';
 import '../../App.css';
@@ -29,6 +29,7 @@ class Weather extends React.Component {
       getWeather(q)
         .then((response) => {
           const convertedData = convertWeatherData(response.data);
+          convertedData.currently.summary = 'cloudy'
           this.setState({ data: convertedData, isLoaded: true, error: false, searchKey: q });
         })
         .catch((error) => {
@@ -51,7 +52,7 @@ class Weather extends React.Component {
     const showCard = this.state.error ? (
       <p className="error">ERROR NOT CITY</p>
     ) : (
-      <Cards
+      <Main
         data={this.state.data}
         isLoaded={this.state.isLoaded}
         searchKey={this.state.searchKey}

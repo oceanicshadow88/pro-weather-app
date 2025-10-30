@@ -1,4 +1,5 @@
 import randomRange from '../Utility';
+import cloudImageUrl from '../../../assets/cloud.png';
 
 class Cloud {
   constructor(options, canvas, context, windSpeed, imageAssets) {
@@ -8,10 +9,28 @@ class Cloud {
     this.options = options;
 
     this.type = 'cloud';
-    this.img = options.img || imageAssets.cloud_02;
 
-    this.width = this.img.width; // randomRange(200, 500);
-    this.height = this.img.height; // 50;
+    // Create Image object from imported URL
+    this.img = new Image();
+    this.img.src = cloudImageUrl;
+
+    // Support scaling - default scale is 1.0
+    this.scale = options.scale || 1.0;
+
+    // Base dimensions will be set from image natural size
+    // We'll calculate scaled dimensions when image loads
+    this.baseWidth = null;
+    this.baseHeight = null;
+    this.width = 100; // Temporary default, will update on load
+    this.height = 50; // Temporary default, will update on load
+
+    // Update dimensions when image loads
+    this.img.onload = () => {
+      this.baseWidth = this.img.naturalWidth;
+      this.baseHeight = this.img.naturalHeight;
+      this.width = this.baseWidth * this.scale;
+      this.height = this.baseHeight * this.scale;
+    };
 
     const max = 10;
     this.xVelocity = (windSpeed - randomRange(0, max)) / 60;
@@ -23,24 +42,40 @@ class Cloud {
 
   draw = function () {
     this.x += this.xVelocity;
-    this.context.drawImage(
-      this.img.image,
-      0,
-      0,
-      this.img.width,
-      this.img.height,
-      this.x,
-      this.y,
-      this.img.width,
-      this.img.height,
-    );
+
+    // Only draw if image is loaded
+    if (this.img.complete && this.img.naturalWidth > 0) {
+      // Update base dimensions on first load
+      if (!this.baseWidth) {
+        this.baseWidth = this.img.naturalWidth;
+        this.baseHeight = this.img.naturalHeight;
+      }
+
+      // Always calculate scaled dimensions from base size
+      this.width = this.baseWidth * this.scale;
+      this.height = this.baseHeight * this.scale;
+
+      // Draw scaled image
+      this.context.drawImage(
+        this.img,
+        0,
+        0,
+        this.img.naturalWidth,
+        this.img.naturalHeight,
+        this.x,
+        this.y,
+        this.width,
+        this.height,
+      );
+    }
+
     if (this.xVelocity > 0) {
-      // >>>
+      // Moving right
       if (this.x > this.canvas.width) {
         this.x = 0 - this.width;
       }
     } else {
-      // <<<
+      // Moving left
       if (this.x < 0 - this.width) {
         this.x = this.canvas.width;
       }
