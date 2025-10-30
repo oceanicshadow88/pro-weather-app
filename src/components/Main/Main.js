@@ -1,5 +1,5 @@
 import React from 'react';
-import TodayWeatherCard from './TodayWeatherCard/TodayWeatherCard';
+import TodayWeatherCard from '../TodayWeatherCard/TodayWeatherCard';
 import Forecast from '../Forecast/Forecast';
 import SocialMedia from '../SoicalMedia/SocialMedia';
 import '../Greeting';
