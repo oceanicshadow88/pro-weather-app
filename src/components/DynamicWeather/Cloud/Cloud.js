@@ -15,21 +15,29 @@ class Cloud {
     this.img.src = cloudImageUrl;
 
     // Support scaling - default scale is 1.0
-    this.scale = options.scale || 1.0;
+    this.baseScale = options.scale || 1.0; // Store base scale
+    this.scale = this.baseScale; // Current scale (can change with canvas resize)
+
+    // Store initial canvas width for responsive scaling
+    // Use clientWidth (rendered size) not canvas.width (internal resolution)
+    this.initialCanvasWidth = canvas.clientWidth || canvas.width;
 
     // Base dimensions will be set from image natural size
     // We'll calculate scaled dimensions when image loads
     this.baseWidth = null;
     this.baseHeight = null;
+    this.aspectRatio = null; // Store aspect ratio to maintain it always
     this.width = 100; // Temporary default, will update on load
     this.height = 50; // Temporary default, will update on load
 
     // Update dimensions when image loads
     this.img.onload = () => {
-      this.baseWidth = this.img.naturalWidth;
-      this.baseHeight = this.img.naturalHeight;
-      this.width = this.baseWidth * this.scale;
-      this.height = this.baseHeight * this.scale;
+      this.baseWidth = 714;
+      this.baseHeight = 213;
+      // Calculate and store aspect ratio
+      this.aspectRatio = this.baseWidth / this.baseHeight;
+      // Calculate scaled dimensions maintaining aspect ratio
+      this.calculateScaledDimensions();
     };
 
     const max = 10;
@@ -43,22 +51,80 @@ class Cloud {
     this.y = options.y !== undefined ? options.y : randomRange(0, maxY);
   }
 
+  // Calculate scaled dimensions maintaining aspect ratio
+  calculateScaledDimensions() {
+    if (this.baseWidth && this.baseHeight) {
+      // Ensure aspect ratio is calculated and stored
+      if (!this.aspectRatio) {
+        this.aspectRatio = this.baseWidth / this.baseHeight;
+      }
+
+      // Always scale from width to maintain perfect aspect ratio
+      // This ensures width/height always equals the original aspect ratio
+      this.width = this.baseWidth * this.scale;
+      this.height = this.width / this.aspectRatio;
+
+      // Verify: height should equal baseHeight * scale
+      // height = (baseWidth * scale) / (baseWidth / baseHeight) = baseHeight * scale ✓
+    }
+  }
+
+  // Update canvas reference and scale based on canvas width changes (responsive scaling)
+  updateCanvasSize(newCanvas) {
+    if (newCanvas) {
+      // Update canvas reference
+      this.canvas = newCanvas;
+      this.context = newCanvas.getContext('2d');
+    }
+
+    // Use clientWidth (rendered size) for scaling calculations
+    const currentWidth = this.canvas ? (this.canvas.clientWidth || this.canvas.width) : 0;
+
+    if (this.initialCanvasWidth && currentWidth && currentWidth !== this.initialCanvasWidth) {
+      // Calculate scale ratio based on canvas width change
+      const widthRatio = currentWidth / this.initialCanvasWidth;
+      this.scale = this.baseScale * widthRatio;
+
+      // Recalculate dimensions with new scale
+      this.calculateScaledDimensions();
+    }
+  }
+
   draw = function () {
+    // Update scale if canvas width changed (check on every frame)
+    // This ensures clouds scale proportionally when window resizes
+    // Use clientWidth (actual rendered size) not canvas.width (internal resolution)
+    if (this.canvas && this.initialCanvasWidth) {
+      const currentWidth = this.canvas.clientWidth || this.canvas.width;
+
+      // Only recalculate if width actually changed (to avoid unnecessary calculations)
+      if (currentWidth && currentWidth !== this.initialCanvasWidth) {
+        const widthRatio = currentWidth / this.initialCanvasWidth;
+        this.scale = this.baseScale * widthRatio;
+
+        // Recalculate dimensions with new scale (maintains aspect ratio)
+        if (this.baseWidth && this.baseHeight) {
+          this.calculateScaledDimensions();
+        }
+      }
+    }
+
     this.x += this.xVelocity;
 
     // Only draw if image is loaded
     if (this.img.complete && this.img.naturalWidth > 0) {
-      // Update base dimensions on first load
-      if (!this.baseWidth) {
+      // Update base dimensions on first load if not already set
+      if (!this.baseWidth || !this.baseHeight) {
         this.baseWidth = this.img.naturalWidth;
         this.baseHeight = this.img.naturalHeight;
+        // Calculate and store aspect ratio
+        this.aspectRatio = this.baseWidth / this.baseHeight;
       }
 
-      // Always calculate scaled dimensions from base size
-      this.width = this.baseWidth * this.scale;
-      this.height = this.baseHeight * this.scale;
+      // Always calculate scaled dimensions maintaining aspect ratio
+      this.calculateScaledDimensions();
 
-      // Draw scaled image
+      // Draw scaled image maintaining aspect ratio
       this.context.drawImage(
         this.img,
         0,
