@@ -28,6 +28,7 @@ class TodayWeatherCard extends React.Component {
                     data={data}
                     height={parseInt(elementHeight, 10)}
                     width={parseInt(elementWidth, 10)}
+                    timeOverride={this.props.timeOverride}
                 />
                 <div className="card__current-temperature">
                     <div className="center">

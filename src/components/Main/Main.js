@@ -10,7 +10,7 @@ function Main(props) {
     if (props.isLoaded) {
         data = (
             <main className="card__main fade-in">
-                <TodayWeatherCard data={props.data} />
+                <TodayWeatherCard data={props.data} timeOverride={props.timeOverride} />
                 <div className="flex detail-info-container flex-warp">
                     <SocialMedia data={props.data} searchKey={props.searchKey} />
                     <Forecast data={props.data} />

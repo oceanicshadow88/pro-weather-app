@@ -4,6 +4,7 @@ import './DashboardPage.css';
 import Main from '../../components/Main/Main';
 import Header from '../../components/Header/Header';
 import BackGround from '../../components/BackGround';
+import TimeControl from '../../components/TimeControl/TimeControl';
 import '../../App.css';
 import { connect } from 'react-redux';
 import { getWeather, convertWeatherData } from '../../api/weatherapi';
@@ -18,6 +19,7 @@ class DashboardPage extends React.Component {
             hasLogin: false,
             error: false,
             searchKey: 'sydney',
+            timeOverride: null,
         };
         this.loadDefaultData();
     }
@@ -57,11 +59,13 @@ class DashboardPage extends React.Component {
                 data={this.state.data}
                 isLoaded={this.state.isLoaded}
                 searchKey={this.state.searchKey}
+                timeOverride={this.state.timeOverride}
             />
         );
         return (
             <div className="DashboardPage">
                 <Header searchPressCallback={this.handleSearchPress} />
+                <TimeControl onTimeChange={(timeOverride) => this.setState({ timeOverride })} />
                 {!this.state.isLoaded ? (
                     <div className="loading--fixed">
                         <LoaderWeather />

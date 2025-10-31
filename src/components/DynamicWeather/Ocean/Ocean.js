@@ -31,7 +31,8 @@ class Ocean {
     }
 
     getOceanColors(hour) {
-        hour = parseInt(hour, 10);
+        // Keep hour as float to allow smooth interpolation with minutes
+        // hour can be 5.5 (5:30 AM), 17.75 (5:45 PM), etc.
 
         // Day colors (7-17) - bright blue ocean with gradient
         const dayTop = '#4a90e2';
@@ -60,23 +61,35 @@ class Ocean {
             topColor = nightTop;
             bottomColor = nightBottom;
             dashColor = nightDash;
-        } else if (hour >= 5 && hour < 7) {
-            // Sunrise - transition from night to day
-            const progress = (hour - 5) / 2;
+        } else if (hour >= 5 && hour < 6) {
+            // Early sunrise (5-6) - transition from night to sunrise colors
+            const progress = (hour - 5) / 1; // 0 to 1
             topColor = this.interpolateColor(nightTop, sunriseTop, progress);
             bottomColor = this.interpolateColor(nightBottom, sunriseBottom, progress);
             dashColor = this.interpolateColor(nightDash, sunriseDash, progress);
+        } else if (hour >= 6 && hour < 7) {
+            // Late sunrise (6-7) - transition from sunrise to day colors
+            const progress = (hour - 6) / 1; // 0 to 1
+            topColor = this.interpolateColor(sunriseTop, dayTop, progress);
+            bottomColor = this.interpolateColor(sunriseBottom, dayBottom, progress);
+            dashColor = this.interpolateColor(sunriseDash, dayDash, progress);
         } else if (hour >= 7 && hour < 17) {
-            // Day
+            // Day (7-17) - pure day colors
             topColor = dayTop;
             bottomColor = dayBottom;
             dashColor = dayDash;
-        } else if (hour >= 17 && hour < 19) {
-            // Sunset - transition from day to night
-            const progress = (hour - 17) / 2;
+        } else if (hour >= 17 && hour < 18) {
+            // Early sunset (17-18) - transition from day to sunset colors
+            const progress = (hour - 17) / 1; // 0 to 1
             topColor = this.interpolateColor(dayTop, sunsetTop, progress);
             bottomColor = this.interpolateColor(dayBottom, sunsetBottom, progress);
             dashColor = this.interpolateColor(dayDash, sunsetDash, progress);
+        } else if (hour >= 18 && hour < 19) {
+            // Late sunset (18-19) - transition from sunset to night colors
+            const progress = (hour - 18) / 1; // 0 to 1
+            topColor = this.interpolateColor(sunsetTop, nightTop, progress);
+            bottomColor = this.interpolateColor(sunsetBottom, nightBottom, progress);
+            dashColor = this.interpolateColor(sunsetDash, nightDash, progress);
         } else {
             // Night (19-24)
             topColor = nightTop;

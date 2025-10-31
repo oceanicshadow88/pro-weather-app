@@ -24,9 +24,24 @@ let weatherDataRef = null; // Store reference to weather data
 let oceanInstance = null; // Store reference to ocean
 let skyInstance = null; // Store reference to sky
 
-// HACK: Override time for testing (set to null to use real time, or set to hour 0-23)
-// Example: const TIME_OVERRIDE = 18; // Forces 6pm for testing
-const TIME_OVERRIDE = null; // Set to 0-23 to override current time, null to use real time
+// Helper function to get current hour (with minute consideration)
+// timeOverride: { hour: 0-23, minute: 0-59 } or null
+const getCurrentHour = (timeOverride) => {
+  if (timeOverride && typeof timeOverride === 'object' && timeOverride.hour !== undefined) {
+    // Use hour from override, with minute fraction for smoother transitions
+    return timeOverride.hour + (timeOverride.minute || 0) / 60;
+  }
+  const now = new Date();
+  return now.getHours() + now.getMinutes() / 60;
+};
+
+// Helper function to get current hour as integer (for day/night checks)
+const getCurrentHourInt = (timeOverride) => {
+  if (timeOverride && typeof timeOverride === 'object' && timeOverride.hour !== undefined) {
+    return timeOverride.hour;
+  }
+  return new Date().getHours();
+};
 
 /**
  * Calculate sun position based on hour of day
@@ -207,10 +222,18 @@ const preLoadImageAssets = (callback) => {
   }
 };
 
-const DynamicWeather = ({ data, width, height }) => {
+const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
   const canvasRef = useRef(null);
   const animateRef = useRef(null);
   const spawnFunctionsRef = useRef(null);
+  const timeOverrideRef = useRef(timeOverride);
+  const animationFrameIdRef = useRef(null);
+  const isMountedRef = useRef(true); // Track if component is mounted
+
+  // Update timeOverride ref when prop changes
+  useEffect(() => {
+    timeOverrideRef.current = timeOverride;
+  }, [timeOverride]);
 
   // Setup spawn functions
   const spawnLightning = () => {
@@ -280,7 +303,7 @@ const DynamicWeather = ({ data, width, height }) => {
     }
 
     // Use real-time hour for sun position (sun shows 5am-7pm)
-    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    const currentHour = getCurrentHour(timeOverrideRef.current);
     const sunRadius = 30; // Base size (scales with canvas)
 
     let x, y;
@@ -322,7 +345,7 @@ const DynamicWeather = ({ data, width, height }) => {
     }
 
     // Use real-time hour for moon position (moon shows 7pm-5am)
-    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    const currentHour = getCurrentHour(timeOverrideRef.current);
     const moonRadius = 30; // Base size (scales with canvas)
 
     // Try center position first to ensure it's visible, then use calculated position
@@ -399,7 +422,7 @@ const DynamicWeather = ({ data, width, height }) => {
     spawnCloud();
 
     // Spawn sun or moon based on time of day
-    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    const currentHour = getCurrentHourInt(timeOverrideRef.current);
     if (currentHour >= 5 && currentHour < 19) {
       // Daytime: 5am-7pm - show sun
       spawnSun();
@@ -421,11 +444,12 @@ const DynamicWeather = ({ data, width, height }) => {
     }
 
     // Spawn sky background
-    skyInstance = new Sky(canvas, context, currentHour);
+    const currentHourFloat = getCurrentHour(timeOverrideRef.current);
+    skyInstance = new Sky(canvas, context, currentHourFloat);
     assets.push(skyInstance);
 
     // Spawn ocean at the bottom
-    oceanInstance = new Ocean(canvas, context, currentHour);
+    oceanInstance = new Ocean(canvas, context, currentHourFloat);
     assets.push(oceanInstance);
 
     const currentData = weatherDataRef || data;
@@ -451,9 +475,14 @@ const DynamicWeather = ({ data, width, height }) => {
     // Store references for animate loop
     weatherDataRef = data;
 
-    let animationFrameId = null;
+    // Mark component as mounted
+    isMountedRef.current = true;
 
     const animate = () => {
+      // Stop animation if component is unmounted
+      if (!isMountedRef.current) {
+        return;
+      }
       // Update canvas references for all assets if canvas changed
       if (canvas !== canvasRef.current) {
         canvas = canvasRef.current;
@@ -476,7 +505,8 @@ const DynamicWeather = ({ data, width, height }) => {
       }
 
       // Get current hour for sun/moon positioning and sky/ocean colors
-      const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+      const currentHour = getCurrentHourInt(timeOverrideRef.current);
+      const currentHourFloat = getCurrentHour(timeOverrideRef.current);
 
       // Update sun or moon based on time of day
       if (currentHour >= 5 && currentHour < 19) {
@@ -485,7 +515,7 @@ const DynamicWeather = ({ data, width, height }) => {
           spawnSun();
         }
         if (sunInstance && canvas) {
-          const targetPos = calculateSunPosition(currentHour, sunInstance.sunRadius, canvas);
+          const targetPos = calculateSunPosition(currentHourFloat, sunInstance.sunRadius, canvas);
           sunInstance.x = targetPos.x;
           const yVelocity = 0.1;
           const yDiff = targetPos.y - sunInstance.y;
@@ -507,7 +537,7 @@ const DynamicWeather = ({ data, width, height }) => {
           spawnMoon();
         }
         if (moonInstance && canvas) {
-          const targetPos = calculateMoonPosition(currentHour, moonInstance.moonRadius, canvas);
+          const targetPos = calculateMoonPosition(currentHourFloat, moonInstance.moonRadius, canvas);
           moonInstance.x = targetPos.x;
           const yVelocity = 0.1;
           const yDiff = targetPos.y - moonInstance.y;
@@ -525,12 +555,12 @@ const DynamicWeather = ({ data, width, height }) => {
         }
       }
 
-      // Update sky and ocean hour for color changes
+      // Update sky and ocean hour for color changes (use float for smoother transitions)
       if (skyInstance) {
-        skyInstance.updateHour(currentHour);
+        skyInstance.updateHour(currentHourFloat);
       }
       if (oceanInstance) {
-        oceanInstance.updateHour(currentHour);
+        oceanInstance.updateHour(currentHourFloat);
       }
 
       // Draw sky background FIRST (sunset/sunrise/day/night)
@@ -572,7 +602,7 @@ const DynamicWeather = ({ data, width, height }) => {
         }
       }
 
-      animationFrameId = window.requestAnimationFrame(animate);
+      animationFrameIdRef.current = window.requestAnimationFrame(animate);
     };
 
     animateRef.current = animate;
@@ -584,9 +614,15 @@ const DynamicWeather = ({ data, width, height }) => {
 
     // Cleanup
     return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
+      // Mark component as unmounted to stop animation loop
+      isMountedRef.current = false;
+
+      // Cancel animation frame
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
       }
+
       // Clear all timers
       Object.values(timers).forEach((timer) => {
         if (timer) {
@@ -597,12 +633,25 @@ const DynamicWeather = ({ data, width, height }) => {
       Object.keys(timers).forEach((key) => {
         delete timers[key];
       });
-      // Clear assets
+
+      // Clear assets array completely
       assets.length = 0;
+
+      // Reset all instance references
       moonInstance = null;
       sunInstance = null;
+      oceanInstance = null;
+      skyInstance = null;
+      weatherDataRef = null;
+
+      // Clear canvas and context references
+      canvas = false;
+      context = false;
+
+      // Clear animate ref
+      animateRef.current = null;
     };
-  }, []); // Only run on mount
+  }, [data]); // Re-run when data changes
 
   // Update weather data when props change
   useEffect(() => {

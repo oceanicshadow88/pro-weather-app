@@ -10,7 +10,8 @@ class Sky {
     }
 
     getBackgroundGradient(hour) {
-        hour = parseInt(hour, 10);
+        // Keep hour as float to allow smooth interpolation with minutes
+        // hour can be 5.5 (5:30 AM), 17.75 (5:45 PM), etc.
 
         // Night colors (deep dark blue - distinctly not black)
         // Three-color gradient for night sky for better visibility
@@ -41,23 +42,37 @@ class Sky {
             midColor = nightMid;
             bottomColor = nightBottom;
             useMidColor = true;
-        } else if (hour >= 5 && hour < 7) {
-            // Sunrise (5-7) - transition from night to day
-            const progress = (hour - 5) / 2; // 0 to 1
+        } else if (hour >= 5 && hour < 6) {
+            // Early sunrise (5-6) - transition from night to sunrise colors
+            const progress = (hour - 5) / 1; // 0 to 1
             topColor = this.interpolateColor(nightTop, sunriseTop, progress);
-            midColor = this.interpolateColor(nightBottom, sunriseMid, progress);
+            midColor = this.interpolateColor(nightMid, sunriseMid, progress);
             bottomColor = this.interpolateColor(nightBottom, sunriseBottom, progress);
             useMidColor = true;
+        } else if (hour >= 6 && hour < 7) {
+            // Late sunrise (6-7) - transition from sunrise to day colors
+            const progress = (hour - 6) / 1; // 0 to 1
+            topColor = this.interpolateColor(sunriseTop, dayTop, progress);
+            midColor = this.interpolateColor(sunriseMid, dayTop, progress); // Blend mid to day
+            bottomColor = this.interpolateColor(sunriseBottom, dayBottom, progress);
+            useMidColor = progress < 0.5; // Use mid color only in first half of transition
         } else if (hour >= 7 && hour < 17) {
-            // Day (7-17)
+            // Day (7-17) - pure day colors
             topColor = dayTop;
             bottomColor = dayBottom;
-        } else if (hour >= 17 && hour < 19) {
-            // Sunset (17-19) - transition from day to night
-            const progress = (hour - 17) / 2; // 0 to 1
+        } else if (hour >= 17 && hour < 18) {
+            // Early sunset (17-18) - transition from day to sunset colors
+            const progress = (hour - 17) / 1; // 0 to 1
             topColor = this.interpolateColor(dayTop, sunsetTop, progress);
             midColor = this.interpolateColor(dayBottom, sunsetMid, progress);
             bottomColor = this.interpolateColor(dayBottom, sunsetBottom, progress);
+            useMidColor = true;
+        } else if (hour >= 18 && hour < 19) {
+            // Late sunset (18-19) - transition from sunset to night colors
+            const progress = (hour - 18) / 1; // 0 to 1
+            topColor = this.interpolateColor(sunsetTop, nightTop, progress);
+            midColor = this.interpolateColor(sunsetMid, nightMid, progress);
+            bottomColor = this.interpolateColor(sunsetBottom, nightBottom, progress);
             useMidColor = true;
         } else {
             // Night (19-24) - use three-color gradient
