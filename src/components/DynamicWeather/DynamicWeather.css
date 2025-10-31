@@ -1,38 +1,36 @@
-
-
-.login canvas{
+.login canvas {
     z-index: 1;
 }
 
-.me{
+.me {
     margin-top: 10px;
     padding-top: 10px;
     border-top: solid 1px #eee;
     text-align: center;
 }
 
-.me a{
+.me a {
     text-decoration: none;
     color: #26a69a;
 }
 
-.me .name{
+.me .name {
     font-size: 16px;
 }
 
-.me .handle{
+.me .handle {
     font-size: 12px;
 }
 
 /* Overlay */
-.canvas-outer{
+.canvas-outer {
     position: relative;
     max-width: 600px;
     overflow: hidden;
     margin: 0 auto;
 }
 
-.overlay{
+.overlay {
     display: flex;
     position: absolute;
     align-items: center;
@@ -44,27 +42,27 @@
     color: #fff;
 }
 
-.location-details{
+.location-details {
     text-align: center;
     width: 100%;
 }
 
-.city{
+.city {
     font-size: 18px;
     text-align: center;
-    text-shadow: 0px 1px 4px rgba(0,0,0,.1);
+    text-shadow: 0px 1px 4px rgba(0, 0, 0, .1);
 }
 
-.temp{
+.temp {
     font-size: 100px;
     text-align: center;
-    text-shadow: 0px 2px 7px rgba(0,0,0,.1);
+    text-shadow: 0px 2px 7px rgba(0, 0, 0, .1);
 }
 
 
 
 /* Canvas */
-.canvas{
+.canvas {
     width: 100%;
     height: auto;
     z-index: -1;
@@ -72,64 +70,67 @@
     position: absolute;
     min-height: 400px;
 }
-.login .canvas{
+
+.login .canvas {
     border-radius: 0;
 }
 
-.night{
-    background: linear-gradient(#140d15 0%, #212e3f 100%);
+.night {
+    /* Background now drawn on canvas via Sky component - no CSS background needed */
+    background: transparent;
 }
 
-.day{
-    background: linear-gradient(#90dffe 0%, #38a3d1 100%);
+.day {
+    /* Background now drawn on canvas via Sky component - no CSS background needed */
+    background: transparent;
 }
 
 .sunrise {
-    background: -webkit-linear-gradient(to bottom, #82a0bc 0%, #aebebe 50%, #e0ceb0 80%, #ffc19c 100%);
-    background: linear-gradient(to bottom, #82a0bc 0%, #aebebe 50%, #e0ceb0 80%, #ffc19c 100%);
+    /* Background now drawn on canvas via Sky component - no CSS background needed */
+    background: transparent;
 }
 
 .sunset {
-    background: -webkit-linear-gradient(to bottom, #10070c 0%, #2e4557 40%, #91aba8 80%, #ddd8a1 100%);
-    background: linear-gradient(to bottom, #10070c 0%, #2e4557 40%, #91aba8 80%, #ddd8a1 100%);
+    /* Background now drawn on canvas via Sky component - no CSS background needed */
+    background: transparent;
 
 }
 
 
 
 /* Controls */
-.controls{
+.controls {
     max-width: 600px;
     margin: 0 auto;
     padding-top: 20px;
 }
 
 @media (max-width: 600px) {
-    .controls{
+    .controls {
         padding: 20px 10px;
     }
 }
 
-.form-line{
+.form-line {
     margin-bottom: 15px;
 }
 
-.toggle-form-line{
+.toggle-form-line {
     display: flex;
 }
 
-.form-line .toggle-label{
+.form-line .toggle-label {
     flex: 2;
     line-height: 38px;
 }
 
-.form-line label{
+.form-line label {
     display: block;
 }
 
 
 
-.fade-in{
+.fade-in {
     animation: fadeIn ease 20s;
     -webkit-animation: fadeIn ease 20s;
     -moz-animation: fadeIn ease 20s;
@@ -139,26 +140,51 @@
 
 
 @keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @-moz-keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @-webkit-keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @-o-keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 @-ms-keyframes fadeIn {
-    0% {opacity:0;}
-    100% {opacity:1;}
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }

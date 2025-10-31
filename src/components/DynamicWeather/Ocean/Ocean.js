@@ -33,14 +33,14 @@ class Ocean {
     getOceanColors(hour) {
         hour = parseInt(hour, 10);
 
-        // Day colors (7-17) - bright blue ocean
+        // Day colors (7-17) - bright blue ocean with gradient
         const dayTop = '#4a90e2';
         const dayBottom = '#2c5aa0';
         const dayDash = '#6ba3e8';
 
-        // Night colors (19-24, 0-5) - dark blue ocean
-        const nightTop = '#1a2332';
-        const nightBottom = '#0d1117';
+        // Night colors (19-24, 0-5) - dark blue ocean with gradient
+        const nightTop = '#19224c';  // Top color (rgb: 25, 34, 76)
+        const nightBottom = '#32508c'; // Bottom color (rgb: 50, 80, 140)
         const nightDash = '#2a3f5f';
 
         // Sunrise colors (5-7)

@@ -12,9 +12,11 @@ class Sky {
     getBackgroundGradient(hour) {
         hour = parseInt(hour, 10);
 
-        // Night colors (dark blue)
-        const nightTop = '#1a1f3a';
-        const nightBottom = '#0d1117';
+        // Night colors (deep dark blue - distinctly not black)
+        // Three-color gradient for night sky for better visibility
+        const nightTop = '#253366';  // Lighter dark blue top (rgb: 78, 110, 157)
+        const nightMid = '#314a85';  // Mid dark color (rgb: 33, 33, 33) for gradient depth
+        const nightBottom = '#5374a7'; // Darker blue bottom (rgb: 45, 64, 89)
 
         // Sunrise colors (orange/pink gradient)
         const sunriseTop = '#ff6b6b';
@@ -34,9 +36,11 @@ class Sky {
         let useMidColor = false;
 
         if (hour >= 0 && hour < 5) {
-            // Night (0-5)
+            // Night (0-5) - use three-color gradient
             topColor = nightTop;
+            midColor = nightMid;
             bottomColor = nightBottom;
+            useMidColor = true;
         } else if (hour >= 5 && hour < 7) {
             // Sunrise (5-7) - transition from night to day
             const progress = (hour - 5) / 2; // 0 to 1
@@ -56,9 +60,11 @@ class Sky {
             bottomColor = this.interpolateColor(dayBottom, sunsetBottom, progress);
             useMidColor = true;
         } else {
-            // Night (19-24)
+            // Night (19-24) - use three-color gradient
             topColor = nightTop;
+            midColor = nightMid;
             bottomColor = nightBottom;
+            useMidColor = true;
         }
 
         return { topColor, midColor, bottomColor, useMidColor };
@@ -95,7 +101,7 @@ class Sky {
             gradient.addColorStop(0.5, midColor);
             gradient.addColorStop(1, bottomColor);
         } else {
-            // Two-color gradient for day/night
+            // Two-color gradient for day/night (always use gradient even if colors are similar)
             gradient.addColorStop(0, topColor);
             gradient.addColorStop(1, bottomColor);
         }
