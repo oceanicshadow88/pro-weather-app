@@ -9,6 +9,7 @@ import SnowFlake from './Snow/Snow';
 import Cloud from './Cloud/Cloud';
 import BlowingLeaf from './BlowingLeaf/BlowingLeaf';
 import Moon from './Moon/Moon';
+import Sun from './Sun/Sun';
 import Ocean from './Ocean/Ocean';
 import Sky from './Sky/Sky';
 
@@ -18,6 +19,7 @@ let canvas = false;
 let context = false;
 const timers = {};
 let moonInstance = null; // Store reference to moon for position updates
+let sunInstance = null; // Store reference to sun for position updates
 let weatherDataRef = null; // Store reference to weather data
 let oceanInstance = null; // Store reference to ocean
 let skyInstance = null; // Store reference to sky
@@ -27,7 +29,58 @@ let skyInstance = null; // Store reference to sky
 const TIME_OVERRIDE = null; // Set to 0-23 to override current time, null to use real time
 
 /**
+ * Calculate sun position based on hour of day
+ * Sun shows during 5am-7pm (5-19)
+ * 24-hour cycle:
+ * 12:00pm (12) = top
+ * 6:00pm (18) = bottom
+ * 6:00am (6) = top (from previous night)
+ */
+const calculateSunPosition = (hour, sunRadius = 50, currentCanvas = null) => {
+  // Use provided canvas or fallback to module-level canvas
+  const canvasToUse = currentCanvas || canvas;
+  if (!canvasToUse) {
+    // Return default position if canvas not ready
+    return { x: 100, y: 100 };
+  }
+
+  let progress = 0;
+
+  if (hour >= 6 && hour < 12) {
+    // 6am-12pm: top to bottom (progress 0 to 1)
+    progress = (hour - 6) / 6;
+  } else if (hour >= 12 && hour < 18) {
+    // 12pm-6pm: bottom to top (progress 1 to 0)
+    progress = 1 - (hour - 12) / 6;
+  } else if (hour >= 5 && hour < 6) {
+    // 5am-6am: at top
+    progress = 0;
+  } else if (hour >= 18 && hour < 19) {
+    // 6pm-7pm: at bottom
+    progress = 1;
+  }
+
+  // Clamp progress between 0 and 1
+  progress = Math.max(0, Math.min(1, progress));
+
+  // Calculate x and y positions (same as moon - to the left of city name)
+  const canvasWidth = canvasToUse.width || canvasToUse.clientWidth || 948;
+  const cityLocationRight = canvasWidth;
+  const estimatedCityNameWidth = 200;
+  const spacing = 30;
+  const x = Math.max(sunRadius + 10, cityLocationRight - estimatedCityNameWidth - spacing - sunRadius);
+
+  const canvasHeight = canvasToUse.height || 350;
+  const topPadding = sunRadius + 20;
+  const bottomPadding = canvasHeight - sunRadius - 20;
+  const y = Math.max(topPadding, Math.min(bottomPadding, topPadding + (bottomPadding - topPadding) * progress));
+
+  return { x, y };
+};
+
+/**
  * Calculate moon position based on hour of day
+ * Moon shows during 7pm-5am (19-24, 0-5)
  * 24-hour cycle:
  * 12:00pm (12) = top
  * 6:00pm (18) = bottom
@@ -210,6 +263,48 @@ const DynamicWeather = ({ data, width, height }) => {
     timers.wind = setTimeout(spawnLeaves, randomRange(500, 1500));
   };
 
+  const spawnSun = () => {
+    // Only spawn sun if it doesn't already exist
+    if (sunInstance) {
+      return;
+    }
+    if (!canvas) {
+      console.warn('Cannot spawn sun: canvas not ready');
+      return;
+    }
+
+    const weatherData = weatherDataRef || data;
+    if (!weatherData || !weatherData.currently) {
+      console.warn('Cannot spawn sun: weather data not ready');
+      return;
+    }
+
+    // Use real-time hour for sun position (sun shows 5am-7pm)
+    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    const sunRadius = 30; // Base size (scales with canvas)
+
+    let x, y;
+    if (canvas.width && canvas.height) {
+      const pos = calculateSunPosition(currentHour, sunRadius, canvas);
+      x = pos.x;
+      y = pos.y;
+      if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
+        console.warn('Sun position off-screen, using center:', { x, y, canvasWidth: canvas.width, canvasHeight: canvas.height });
+        x = canvas.width / 2;
+        y = canvas.height / 2;
+      }
+    } else {
+      x = 400;
+      y = 200;
+    }
+
+    console.log('Spawning sun:', { x, y, sunRadius, currentHour, canvasWidth: canvas.width, canvasHeight: canvas.height });
+
+    sunInstance = new Sun(canvas, context, x, y, sunRadius);
+    assets.push(sunInstance);
+    console.log('Sun spawned successfully, assets count:', assets.length, 'sunInstance:', !!sunInstance);
+  };
+
   const spawnMoon = () => {
     // Only spawn moon if it doesn't already exist
     if (moonInstance) {
@@ -226,8 +321,8 @@ const DynamicWeather = ({ data, width, height }) => {
       return;
     }
 
-    const currentHour = parseInt(moment.unix(weatherData.currently.time).format('H'), 10);
-    // Use smaller base radius - will scale proportionally with canvas
+    // Use real-time hour for moon position (moon shows 7pm-5am)
+    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
     const moonRadius = 30; // Base size (scales with canvas)
 
     // Try center position first to ensure it's visible, then use calculated position
@@ -258,14 +353,14 @@ const DynamicWeather = ({ data, width, height }) => {
   // Store spawn functions in ref for access in beginSpawning
   spawnFunctionsRef.current = {
     snow: spawnSnow,
-    'clear-day': [spawnMoon, spawnCloud],
-    'partly-cloudy-day': [spawnMoon, spawnCloud],
-    'partly-cloudy-night': [spawnMoon, spawnCloud],
-    cloudy: [spawnMoon, spawnCloud], // Add moon to cloudy too
-    'clear-night': [spawnMoon, spawnCloud],
-    rain: [spawnMoon, spawnRain], // Add moon to rain
-    other: [spawnMoon, spawnLightning], // Add moon to other
-    wind: [spawnMoon, spawnLeaves], // Add moon to wind
+    'clear-day': [spawnCloud],
+    'partly-cloudy-day': [spawnCloud],
+    'partly-cloudy-night': [spawnCloud],
+    cloudy: [spawnCloud],
+    'clear-night': [spawnCloud],
+    rain: [spawnRain],
+    other: spawnLightning,
+    wind: spawnLeaves,
   };
 
   const pause = () => { };
@@ -290,6 +385,7 @@ const DynamicWeather = ({ data, width, height }) => {
     }
     // reset instances
     moonInstance = null;
+    sunInstance = null;
     oceanInstance = null;
     skyInstance = null;
     // Update data reference
@@ -301,10 +397,30 @@ const DynamicWeather = ({ data, width, height }) => {
   const beginSpawning = () => {
     animateRef.current();
     spawnCloud();
-    spawnMoon();
+
+    // Spawn sun or moon based on time of day
+    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    if (currentHour >= 5 && currentHour < 19) {
+      // Daytime: 5am-7pm - show sun
+      spawnSun();
+      // Remove moon if it exists
+      if (moonInstance) {
+        const index = assets.indexOf(moonInstance);
+        if (index > -1) assets.splice(index, 1);
+        moonInstance = null;
+      }
+    } else {
+      // Nighttime: 7pm-5am - show moon
+      spawnMoon();
+      // Remove sun if it exists
+      if (sunInstance) {
+        const index = assets.indexOf(sunInstance);
+        if (index > -1) assets.splice(index, 1);
+        sunInstance = null;
+      }
+    }
 
     // Spawn sky background
-    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
     skyInstance = new Sky(canvas, context, currentHour);
     assets.push(skyInstance);
 
@@ -350,32 +466,64 @@ const DynamicWeather = ({ data, width, height }) => {
           }
         });
 
-        // Update moon canvas reference and scale
+        // Update moon and sun canvas references and scale
         if (moonInstance && moonInstance.updateCanvasSize) {
           moonInstance.updateCanvasSize(canvas);
         }
-      }
-
-      // Update moon position based on current time if moon exists
-      if (moonInstance && weatherDataRef && canvas) {
-        const currentHour = parseInt(moment.unix(weatherDataRef.currently.time).format('H'), 10);
-        const targetPos = calculateMoonPosition(currentHour, moonInstance.moonRadius, canvas);
-
-        // Update both x and y positions
-        moonInstance.x = targetPos.x;
-
-        // Smooth animation toward target y position
-        const yVelocity = 0.1;
-        const yDiff = targetPos.y - moonInstance.y;
-        if (Math.abs(yDiff) > 0.5) {
-          moonInstance.y += yDiff * yVelocity;
-        } else {
-          moonInstance.y = targetPos.y;
+        if (sunInstance && sunInstance.updateCanvasSize) {
+          sunInstance.updateCanvasSize(canvas);
         }
       }
 
-      // Get current hour (use override if set, otherwise real time)
+      // Get current hour for sun/moon positioning and sky/ocean colors
       const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+
+      // Update sun or moon based on time of day
+      if (currentHour >= 5 && currentHour < 19) {
+        // Daytime: update sun position
+        if (!sunInstance && canvas) {
+          spawnSun();
+        }
+        if (sunInstance && canvas) {
+          const targetPos = calculateSunPosition(currentHour, sunInstance.sunRadius, canvas);
+          sunInstance.x = targetPos.x;
+          const yVelocity = 0.1;
+          const yDiff = targetPos.y - sunInstance.y;
+          if (Math.abs(yDiff) > 0.5) {
+            sunInstance.y += yDiff * yVelocity;
+          } else {
+            sunInstance.y = targetPos.y;
+          }
+        }
+        // Remove moon if it exists during day
+        if (moonInstance) {
+          const index = assets.indexOf(moonInstance);
+          if (index > -1) assets.splice(index, 1);
+          moonInstance = null;
+        }
+      } else {
+        // Nighttime: update moon position
+        if (!moonInstance && canvas) {
+          spawnMoon();
+        }
+        if (moonInstance && canvas) {
+          const targetPos = calculateMoonPosition(currentHour, moonInstance.moonRadius, canvas);
+          moonInstance.x = targetPos.x;
+          const yVelocity = 0.1;
+          const yDiff = targetPos.y - moonInstance.y;
+          if (Math.abs(yDiff) > 0.5) {
+            moonInstance.y += yDiff * yVelocity;
+          } else {
+            moonInstance.y = targetPos.y;
+          }
+        }
+        // Remove sun if it exists during night
+        if (sunInstance) {
+          const index = assets.indexOf(sunInstance);
+          if (index > -1) assets.splice(index, 1);
+          sunInstance = null;
+        }
+      }
 
       // Update sky and ocean hour for color changes
       if (skyInstance) {
@@ -395,7 +543,13 @@ const DynamicWeather = ({ data, width, height }) => {
         oceanInstance.draw();
       }
 
-      // Draw moon FIRST (before other assets) to ensure visibility
+      // Draw sun or moon FIRST (before other assets) to ensure visibility
+      if (sunInstance) {
+        const drawResult = sunInstance.draw();
+        if (!drawResult) {
+          console.warn('Sun draw returned false');
+        }
+      }
       if (moonInstance) {
         const drawResult = moonInstance.draw();
         if (!drawResult) {
@@ -404,11 +558,11 @@ const DynamicWeather = ({ data, width, height }) => {
       }
 
       // Draw each asset, if false, remove particle from assets
-      // Skip moonInstance since we already drew it above
+      // Skip sun/moon instances since we already drew them above
       for (let i = 0, n = assets.length; i < n; i += 1) {
         const asset = assets[i];
-        // Skip if it's the moon (already drawn) or sky/ocean (already drawn)
-        if (asset === moonInstance || asset === skyInstance || asset === oceanInstance) {
+        // Skip if it's the sun/moon (already drawn) or sky/ocean (already drawn)
+        if (asset === sunInstance || asset === moonInstance || asset === skyInstance || asset === oceanInstance) {
           continue;
         }
         if (!asset.draw()) {
@@ -446,6 +600,7 @@ const DynamicWeather = ({ data, width, height }) => {
       // Clear assets
       assets.length = 0;
       moonInstance = null;
+      sunInstance = null;
     };
   }, []); // Only run on mount
 
@@ -473,9 +628,12 @@ const DynamicWeather = ({ data, width, height }) => {
       }
     });
 
-    // Update moon canvas reference and scale
+    // Update moon and sun canvas references and scale
     if (moonInstance && moonInstance.updateCanvasSize) {
       moonInstance.updateCanvasSize(currentCanvas);
+    }
+    if (sunInstance && sunInstance.updateCanvasSize) {
+      sunInstance.updateCanvasSize(currentCanvas);
     }
 
     // Update ocean size if needed
