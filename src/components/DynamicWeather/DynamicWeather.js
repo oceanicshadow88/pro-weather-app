@@ -228,7 +228,7 @@ const DynamicWeather = ({ data, width, height }) => {
 
     const currentHour = parseInt(moment.unix(weatherData.currently.time).format('H'), 10);
     // Use smaller base radius - will scale proportionally with canvas
-    const moonRadius = 40; // Base size (scales with canvas)
+    const moonRadius = 30; // Base size (scales with canvas)
 
     // Try center position first to ensure it's visible, then use calculated position
     let x, y;

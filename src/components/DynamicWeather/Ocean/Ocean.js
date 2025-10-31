@@ -1,15 +1,17 @@
 class Ocean {
+    // Ocean height as percentage of canvas height
+    static OCEAN_HEIGHT_PERCENTAGE = 0.2; // 40%
+
     constructor(canvas, context, hour) {
         this.canvas = canvas;
         this.context = context;
         this.hour = hour;
 
         // Ocean takes up bottom portion of canvas
-        this.oceanHeight = canvas.height * 0.4; // 40% of canvas height
-        this.y = canvas.height - this.oceanHeight;
-
-        // Generate random dashes for ocean surface effects
-        this.dashes = this.generateDashes();
+        this.oceanHeight = 0;
+        this.y = 0;
+        // updateDimensions() will generate dashes, so no need to call it separately
+        this.updateDimensions();
     }
 
     generateDashes() {
@@ -109,23 +111,25 @@ class Ocean {
         this.hour = hour;
     }
 
-    updateCanvasSize() {
-        // Update ocean dimensions when canvas resizes
-        this.oceanHeight = this.canvas.height * 0.4;
+    // Update ocean dimensions - single source of truth for dimension calculation
+    updateDimensions() {
+        this.oceanHeight = this.canvas.height * Ocean.OCEAN_HEIGHT_PERCENTAGE;
         this.y = this.canvas.height - this.oceanHeight;
         // Regenerate dashes for new canvas size
         this.dashes = this.generateDashes();
     }
 
+    updateCanvasSize() {
+        // Update ocean dimensions when canvas resizes
+        this.updateDimensions();
+    }
+
     draw() {
         // Update dimensions if canvas size changed
-        const currentOceanHeight = this.canvas.height * 0.4;
-        const currentY = this.canvas.height - currentOceanHeight;
-        if (this.oceanHeight !== currentOceanHeight || this.y !== currentY) {
-            this.oceanHeight = currentOceanHeight;
-            this.y = currentY;
-            // Regenerate dashes for new positions
-            this.dashes = this.generateDashes();
+        const expectedHeight = this.canvas.height * Ocean.OCEAN_HEIGHT_PERCENTAGE;
+        const expectedY = this.canvas.height - expectedHeight;
+        if (this.oceanHeight !== expectedHeight || this.y !== expectedY) {
+            this.updateDimensions();
         }
 
         // Get colors based on current hour

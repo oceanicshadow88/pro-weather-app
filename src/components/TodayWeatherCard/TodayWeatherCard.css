@@ -1,5 +1,4 @@
-
-.card__current{
+.card__current {
   width: 100%;
   position: relative;
   text-align: left;
@@ -81,13 +80,16 @@
   font-size: 90px;
   margin: 20px 0;
 }
+
 @media only screen and (max-width: 1680px) {
-  .card__main{
+  .card__main {
     margin: 0px auto 0 auto;
   }
-  .card__current{
-    min-height: 250px;
+
+  .card__current {
+    min-height: 375px;
   }
+
   .card__current-temperature {
     padding: 50px 20px 50px 40px;
     font-size: 80px;
