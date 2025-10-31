@@ -1,0 +1,180 @@
+class Ocean {
+    constructor(canvas, context, hour) {
+        this.canvas = canvas;
+        this.context = context;
+        this.hour = hour;
+
+        // Ocean takes up bottom portion of canvas
+        this.oceanHeight = canvas.height * 0.4; // 40% of canvas height
+        this.y = canvas.height - this.oceanHeight;
+
+        // Generate random dashes for ocean surface effects
+        this.dashes = this.generateDashes();
+    }
+
+    generateDashes() {
+        const dashes = [];
+        const dashCount = 20; // Number of horizontal dashes
+
+        for (let i = 0; i < dashCount; i++) {
+            dashes.push({
+                x: Math.random() * this.canvas.width,
+                y: this.y + Math.random() * this.oceanHeight,
+                width: 30 + Math.random() * 50, // Random length
+                opacity: 0.3 + Math.random() * 0.4, // Vary opacity
+            });
+        }
+
+        return dashes;
+    }
+
+    getOceanColors(hour) {
+        hour = parseInt(hour, 10);
+
+        // Day colors (7-17) - bright blue ocean
+        const dayTop = '#4a90e2';
+        const dayBottom = '#2c5aa0';
+        const dayDash = '#6ba3e8';
+
+        // Night colors (19-24, 0-5) - dark blue ocean
+        const nightTop = '#1a2332';
+        const nightBottom = '#0d1117';
+        const nightDash = '#2a3f5f';
+
+        // Sunrise colors (5-7)
+        const sunriseTop = '#3d5a80';
+        const sunriseBottom = '#1e3a5f';
+        const sunriseDash = '#5a7fa3';
+
+        // Sunset colors (17-19)
+        const sunsetTop = '#2d4a6b';
+        const sunsetBottom = '#1a2f4a';
+        const sunsetDash = '#4a6b8f';
+
+        let topColor, bottomColor, dashColor;
+
+        if (hour >= 0 && hour < 5) {
+            // Night
+            topColor = nightTop;
+            bottomColor = nightBottom;
+            dashColor = nightDash;
+        } else if (hour >= 5 && hour < 7) {
+            // Sunrise - transition from night to day
+            const progress = (hour - 5) / 2;
+            topColor = this.interpolateColor(nightTop, sunriseTop, progress);
+            bottomColor = this.interpolateColor(nightBottom, sunriseBottom, progress);
+            dashColor = this.interpolateColor(nightDash, sunriseDash, progress);
+        } else if (hour >= 7 && hour < 17) {
+            // Day
+            topColor = dayTop;
+            bottomColor = dayBottom;
+            dashColor = dayDash;
+        } else if (hour >= 17 && hour < 19) {
+            // Sunset - transition from day to night
+            const progress = (hour - 17) / 2;
+            topColor = this.interpolateColor(dayTop, sunsetTop, progress);
+            bottomColor = this.interpolateColor(dayBottom, sunsetBottom, progress);
+            dashColor = this.interpolateColor(dayDash, sunsetDash, progress);
+        } else {
+            // Night (19-24)
+            topColor = nightTop;
+            bottomColor = nightBottom;
+            dashColor = nightDash;
+        }
+
+        return { topColor, bottomColor, dashColor };
+    }
+
+    interpolateColor(color1, color2, factor) {
+        const c1 = this.hexToRgb(color1);
+        const c2 = this.hexToRgb(color2);
+
+        const r = Math.round(c1.r + (c2.r - c1.r) * factor);
+        const g = Math.round(c1.g + (c2.g - c1.g) * factor);
+        const b = Math.round(c1.b + (c2.b - c1.b) * factor);
+
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16),
+        } : { r: 0, g: 0, b: 0 };
+    }
+
+    updateHour(hour) {
+        this.hour = hour;
+    }
+
+    updateCanvasSize() {
+        // Update ocean dimensions when canvas resizes
+        this.oceanHeight = this.canvas.height * 0.4;
+        this.y = this.canvas.height - this.oceanHeight;
+        // Regenerate dashes for new canvas size
+        this.dashes = this.generateDashes();
+    }
+
+    draw() {
+        // Update dimensions if canvas size changed
+        const currentOceanHeight = this.canvas.height * 0.4;
+        const currentY = this.canvas.height - currentOceanHeight;
+        if (this.oceanHeight !== currentOceanHeight || this.y !== currentY) {
+            this.oceanHeight = currentOceanHeight;
+            this.y = currentY;
+            // Regenerate dashes for new positions
+            this.dashes = this.generateDashes();
+        }
+
+        // Get colors based on current hour
+        const { topColor, bottomColor, dashColor } = this.getOceanColors(this.hour);
+
+        // Draw ocean with rounded bottom corners
+        this.context.beginPath();
+        this.context.moveTo(0, this.y);
+        this.context.lineTo(this.canvas.width, this.y);
+        this.context.lineTo(this.canvas.width, this.canvas.height);
+        // Bottom right rounded corner
+        this.context.quadraticCurveTo(
+            this.canvas.width,
+            this.canvas.height,
+            this.canvas.width - 20,
+            this.canvas.height
+        );
+        this.context.lineTo(20, this.canvas.height);
+        // Bottom left rounded corner
+        this.context.quadraticCurveTo(0, this.canvas.height, 0, this.canvas.height);
+        this.context.closePath();
+
+        // Create gradient for ocean depth effect
+        const gradient = this.context.createLinearGradient(0, this.y, 0, this.canvas.height);
+        gradient.addColorStop(0, topColor);
+        gradient.addColorStop(1, bottomColor);
+
+        this.context.fillStyle = gradient;
+        this.context.fill();
+
+        // Draw horizontal dashes for ocean surface/light effects
+        this.context.save();
+        this.context.strokeStyle = dashColor;
+        this.context.lineWidth = 2;
+        this.context.lineCap = 'round';
+
+        this.dashes.forEach((dash) => {
+            this.context.globalAlpha = dash.opacity;
+            this.context.beginPath();
+            this.context.moveTo(dash.x, dash.y);
+            this.context.lineTo(dash.x + dash.width, dash.y);
+            this.context.stroke();
+        });
+
+        this.context.restore();
+
+        return true;
+    }
+}
+
+export default Ocean;
+

@@ -37,7 +37,10 @@ class Cloud {
     this.yVelocity = 0;
 
     this.x = options.x || randomRange(-100, canvas.width + 100);
-    this.y = randomRange(0 - this.height / 2, -60);
+    // Spawn clouds within visible canvas area (adjust Y based on canvas height)
+    // Use a percentage of canvas height to position clouds in the upper portion
+    const maxY = canvas.height * 0.3; // Top 30% of canvas
+    this.y = options.y !== undefined ? options.y : randomRange(0, maxY);
   }
 
   draw = function () {

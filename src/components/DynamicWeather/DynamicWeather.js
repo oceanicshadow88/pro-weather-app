@@ -9,6 +9,7 @@ import SnowFlake from './Snow/Snow';
 import Cloud from './Cloud/Cloud';
 import BlowingLeaf from './BlowingLeaf/BlowingLeaf';
 import Sun from './Sun/Sun';
+import Ocean from './Ocean/Ocean';
 
 const assets = [];
 
@@ -17,6 +18,7 @@ let context = false;
 const timers = {};
 let sunInstance = null; // Store reference to sun for position updates
 let weatherDataRef = null; // Store reference to weather data
+let oceanInstance = null; // Store reference to ocean
 
 /**
  * Calculate moon position based on hour of day
@@ -273,11 +275,24 @@ const DynamicWeather = ({ data, width, height }) => {
     }, 250);
   };
 
-  const spawnCloud = (scale = 1.0) => {
+  const spawnCloud = (scale = 0.1) => {
     // Spawn clouds with scaling support
-    assets.push(new Cloud({ x: -400, scale }, canvas, context, 1, imageAssets));
-    assets.push(new Cloud({ x: 700, scale }, canvas, context, 1, imageAssets));
-    assets.push(new Cloud({ x: 1400, scale }, canvas, context, 1, imageAssets));
+    // Default scale 0.3 (30% of original size) to fit smaller canvas (948x350)
+    // Clouds positioned across the canvas and in visible Y range
+    const cloud1X = -canvas.width * 0.2;
+    const cloud2X = canvas.width * 0.3;
+    const cloud3X = canvas.width * 0.7;
+
+
+    const offset = 50
+    // Position clouds in upper portion of canvas (top 15-25% area)
+    const cloud1Y = canvas.height * 0.15 - offset;
+    const cloud2Y = canvas.height * 0.12 - offset;
+    const cloud3Y = canvas.height * 0.18 - offset;
+
+    assets.push(new Cloud({ x: cloud1X, y: cloud1Y, scale }, canvas, context, 1, imageAssets));
+    assets.push(new Cloud({ x: cloud2X, y: cloud2Y, scale }, canvas, context, 1, imageAssets));
+    assets.push(new Cloud({ x: cloud3X, y: cloud3Y, scale }, canvas, context, 1, imageAssets));
   };
 
   const spawnLeaves = () => {
@@ -333,8 +348,9 @@ const DynamicWeather = ({ data, width, height }) => {
       n -= 1;
       i -= 1;
     }
-    // reset sun instance
+    // reset instances
     sunInstance = null;
+    oceanInstance = null;
     // Update data reference
     weatherDataRef = data;
     // start spawning
@@ -345,6 +361,12 @@ const DynamicWeather = ({ data, width, height }) => {
     animateRef.current();
     spawnCloud();
     spawnSun();
+
+    // Spawn ocean at the bottom
+    const now = new Date();
+    const currentHour = now.getHours();
+    oceanInstance = new Ocean(canvas, context, currentHour);
+    assets.push(oceanInstance);
 
     const currentData = weatherDataRef || data;
     const weather = spawnFunctionsRef.current[currentData.currently.icon];
@@ -390,6 +412,11 @@ const DynamicWeather = ({ data, width, height }) => {
       // Get current real-time hour for background (not weather data time)
       const now = new Date();
       const currentHour = now.getHours(); // 0-23 based on local time
+
+      // Update ocean hour for color changes
+      if (oceanInstance) {
+        oceanInstance.updateHour(currentHour);
+      }
 
       // Draw background gradient (sunset/sunrise/day/night)
       drawBackground(context, canvas.width, canvas.height, currentHour);

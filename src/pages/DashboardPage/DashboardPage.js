@@ -42,6 +42,7 @@ class DashboardPage extends React.Component {
         try {
             const result = await getWeather(this.props.city);
             const convertedData = convertWeatherData(result.data);
+            convertedData.currently.icon = 'cloudy'
             this.setState({ data: convertedData, isLoaded: true, error: false });
         } catch (error) {
             this.setState({ temp: 'Error', isLoaded: true, error: true });
