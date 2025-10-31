@@ -10,6 +10,7 @@ import Cloud from './Cloud/Cloud';
 import BlowingLeaf from './BlowingLeaf/BlowingLeaf';
 import Sun from './Sun/Sun';
 import Ocean from './Ocean/Ocean';
+import Sky from './Sky/Sky';
 
 const assets = [];
 
@@ -19,6 +20,11 @@ const timers = {};
 let sunInstance = null; // Store reference to sun for position updates
 let weatherDataRef = null; // Store reference to weather data
 let oceanInstance = null; // Store reference to ocean
+let skyInstance = null; // Store reference to sky
+
+// HACK: Override time for testing (set to null to use real time, or set to hour 0-23)
+// Example: const TIME_OVERRIDE = 18; // Forces 6pm for testing
+const TIME_OVERRIDE = null; // Set to 0-23 to override current time, null to use real time
 
 /**
  * Calculate moon position based on hour of day
@@ -108,113 +114,6 @@ const getShowTime = (hours) => {
   return 'night';
 };
 
-/**
- * Calculate background gradient colors based on hour of day
- * Simulates sunset, sunrise, day, and night
- */
-const getBackgroundGradient = (hour, canvasHeight) => {
-  hour = parseInt(hour, 10);
-
-  // Night colors (dark blue)
-  const nightTop = '#1a1f3a';
-  const nightBottom = '#0d1117';
-
-  // Sunrise colors (orange/pink gradient)
-  const sunriseTop = '#ff6b6b';
-  const sunriseMid = '#ffa94d';
-  const sunriseBottom = '#ff8787';
-
-  // Day colors (sky blue)
-  const dayTop = '#87ceeb';
-  const dayBottom = '#e0f6ff';
-
-  // Sunset colors (orange/red gradient)
-  const sunsetTop = '#ff7849';
-  const sunsetMid = '#ff6b35';
-  const sunsetBottom = '#ff4757';
-
-  let topColor, bottomColor, midColor = null;
-  let useMidColor = false;
-
-  if (hour >= 0 && hour < 5) {
-    // Night (0-5)
-    topColor = nightTop;
-    bottomColor = nightBottom;
-  } else if (hour >= 5 && hour < 7) {
-    // Sunrise (5-7) - transition from night to day
-    const progress = (hour - 5) / 2; // 0 to 1
-    topColor = interpolateColor(nightTop, sunriseTop, progress);
-    midColor = interpolateColor(nightBottom, sunriseMid, progress);
-    bottomColor = interpolateColor(nightBottom, sunriseBottom, progress);
-    useMidColor = true;
-  } else if (hour >= 7 && hour < 17) {
-    // Day (7-17)
-    topColor = dayTop;
-    bottomColor = dayBottom;
-  } else if (hour >= 17 && hour < 19) {
-    // Sunset (17-19) - transition from day to night
-    const progress = (hour - 17) / 2; // 0 to 1
-    topColor = interpolateColor(dayTop, sunsetTop, progress);
-    midColor = interpolateColor(dayBottom, sunsetMid, progress);
-    bottomColor = interpolateColor(dayBottom, sunsetBottom, progress);
-    useMidColor = true;
-  } else {
-    // Night (19-24)
-    topColor = nightTop;
-    bottomColor = nightBottom;
-  }
-
-  return { topColor, midColor, bottomColor, useMidColor };
-};
-
-/**
- * Interpolate between two hex colors
- */
-const interpolateColor = (color1, color2, factor) => {
-  const c1 = hexToRgb(color1);
-  const c2 = hexToRgb(color2);
-
-  const r = Math.round(c1.r + (c2.r - c1.r) * factor);
-  const g = Math.round(c1.g + (c2.g - c1.g) * factor);
-  const b = Math.round(c1.b + (c2.b - c1.b) * factor);
-
-  return `rgb(${r}, ${g}, ${b})`;
-};
-
-/**
- * Convert hex color to RGB
- */
-const hexToRgb = (hex) => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16),
-  } : { r: 0, g: 0, b: 0 };
-};
-
-/**
- * Draw background gradient on canvas
- */
-const drawBackground = (context, canvasWidth, canvasHeight, hour) => {
-  const { topColor, midColor, bottomColor, useMidColor } = getBackgroundGradient(hour, canvasHeight);
-
-  const gradient = context.createLinearGradient(0, 0, 0, canvasHeight);
-
-  if (useMidColor && midColor) {
-    // Three-color gradient for sunrise/sunset
-    gradient.addColorStop(0, topColor);
-    gradient.addColorStop(0.5, midColor);
-    gradient.addColorStop(1, bottomColor);
-  } else {
-    // Two-color gradient for day/night
-    gradient.addColorStop(0, topColor);
-    gradient.addColorStop(1, bottomColor);
-  }
-
-  context.fillStyle = gradient;
-  context.fillRect(0, 0, canvasWidth, canvasHeight);
-};
 
 const preLoadImageAssets = (callback) => {
   let imageAssetsCount = 0;
@@ -351,6 +250,7 @@ const DynamicWeather = ({ data, width, height }) => {
     // reset instances
     sunInstance = null;
     oceanInstance = null;
+    skyInstance = null;
     // Update data reference
     weatherDataRef = data;
     // start spawning
@@ -362,9 +262,12 @@ const DynamicWeather = ({ data, width, height }) => {
     spawnCloud();
     spawnSun();
 
+    // Spawn sky background
+    const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
+    skyInstance = new Sky(canvas, context, currentHour);
+    assets.push(skyInstance);
+
     // Spawn ocean at the bottom
-    const now = new Date();
-    const currentHour = now.getHours();
     oceanInstance = new Ocean(canvas, context, currentHour);
     assets.push(oceanInstance);
 
@@ -409,17 +312,21 @@ const DynamicWeather = ({ data, width, height }) => {
         }
       }
 
-      // Get current real-time hour for background (not weather data time)
-      const now = new Date();
-      const currentHour = now.getHours(); // 0-23 based on local time
+      // Get current hour (use override if set, otherwise real time)
+      const currentHour = TIME_OVERRIDE !== null ? TIME_OVERRIDE : new Date().getHours();
 
-      // Update ocean hour for color changes
+      // Update sky and ocean hour for color changes
+      if (skyInstance) {
+        skyInstance.updateHour(currentHour);
+      }
       if (oceanInstance) {
         oceanInstance.updateHour(currentHour);
       }
 
-      // Draw background gradient (sunset/sunrise/day/night)
-      drawBackground(context, canvas.width, canvas.height, currentHour);
+      // Draw sky background (sunset/sunrise/day/night)
+      if (skyInstance) {
+        skyInstance.draw();
+      }
 
       // Draw each asset, if false, remove particle from assets
       for (let i = 0, n = assets.length; i < n; i += 1) {
