@@ -32,8 +32,8 @@ class Cloud {
 
     // Update dimensions when image loads
     this.img.onload = () => {
-      this.baseWidth = 714;
-      this.baseHeight = 213;
+      this.baseWidth = 714 * 1.75;
+      this.baseHeight = 213 * 1.75;
       // Calculate and store aspect ratio
       this.aspectRatio = this.baseWidth / this.baseHeight;
       // Calculate scaled dimensions maintaining aspect ratio
