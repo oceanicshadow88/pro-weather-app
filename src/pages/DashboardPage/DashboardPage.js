@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './DashboardPage.css';
 
 import Main from '../../components/Main/Main';
@@ -10,74 +10,79 @@ import { connect } from 'react-redux';
 import { getWeather, convertWeatherData } from '../../api/weatherapi';
 import LoaderWeather from '../../components/LoaderWeather/LoaderWeather';
 
-class DashboardPage extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            isLoaded: false,
-            data: [],
-            hasLogin: false,
-            error: false,
-            searchKey: 'sydney',
-            timeOverride: null,
-        };
-        this.loadDefaultData();
-    }
+const DashboardPage = (props) => {
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [data, setData] = useState([]);
+    const [error, setError] = useState(false);
+    const [searchKey, setSearchKey] = useState('sydney');
+    const [timeOverride, setTimeOverride] = useState(null);
 
-    handleSearchPress = (e) => {
+    const loadDefaultData = async () => {
+        try {
+            const result = await getWeather(props.city);
+            const convertedData = convertWeatherData(result.data);
+            convertedData.currently.icon = 'cloudy'
+            setData(convertedData);
+            setIsLoaded(true);
+            setError(false);
+        } catch (error) {
+            setData('Error');
+            setIsLoaded(true);
+            setError(true);
+        }
+    };
+
+    useEffect(() => {
+        loadDefaultData();
+    }, [props.city]);
+
+    const handleSearchPress = (e) => {
         if (e.key === 'Enter') {
-            this.setState({ isLoaded: false });
+            setIsLoaded(false);
             const q = e.target.value.toLowerCase();
             getWeather(q)
                 .then((response) => {
                     const convertedData = convertWeatherData(response.data);
                     convertedData.currently.summary = 'cloudy'
-                    this.setState({ data: convertedData, isLoaded: true, error: false, searchKey: q });
+                    setData(convertedData);
+                    setIsLoaded(true);
+                    setError(false);
+                    setSearchKey(q);
                 })
                 .catch((error) => {
-                    this.setState({ temp: 'Error', isLoaded: true, error: true });
+                    setData('Error');
+                    setIsLoaded(true);
+                    setError(true);
                 });
         }
     };
 
-    async loadDefaultData() {
-        try {
-            const result = await getWeather(this.props.city);
-            const convertedData = convertWeatherData(result.data);
-            convertedData.currently.icon = 'cloudy'
-            this.setState({ data: convertedData, isLoaded: true, error: false });
-        } catch (error) {
-            this.setState({ temp: 'Error', isLoaded: true, error: true });
-        }
-    }
+    const showCard = error ? (
+        <p className="error">ERROR NOT CITY</p>
+    ) : (
+        <Main
+            data={data}
+            isLoaded={isLoaded}
+            searchKey={searchKey}
+            timeOverride={timeOverride}
+        />
+    );
 
-    render() {
-        const showCard = this.state.error ? (
-            <p className="error">ERROR NOT CITY</p>
-        ) : (
-            <Main
-                data={this.state.data}
-                isLoaded={this.state.isLoaded}
-                searchKey={this.state.searchKey}
-                timeOverride={this.state.timeOverride}
-            />
-        );
-        return (
-            <div className="DashboardPage">
-                <Header searchPressCallback={this.handleSearchPress} />
-                <TimeControl onTimeChange={(timeOverride) => this.setState({ timeOverride })} />
-                {!this.state.isLoaded ? (
-                    <div className="loading--fixed">
-                        <LoaderWeather />
-                    </div>
-                ) : (
-                    showCard
-                )}
-                <BackGround />
-            </div>
-        );
-    }
-}
+    return (
+        <div className="DashboardPage">
+            <Header searchPressCallback={handleSearchPress} />
+            <TimeControl onTimeChange={(timeOverride) => setTimeOverride(timeOverride)} />
+            {!isLoaded ? (
+                <div className="loading--fixed">
+                    <LoaderWeather />
+                </div>
+            ) : (
+                showCard
+            )}
+            <BackGround />
+        </div>
+    );
+};
 
 const mapStateToProps = (state) => ({
     isAuthenticated: state.auth.token !== null,
