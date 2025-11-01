@@ -1,7 +1,7 @@
 import React from 'react';
-
 import ReactAnimatedWeather from 'react-animated-weather';
 import moment from 'moment';
+import { getSkyTopColor, darkenColor, getCurrentHour } from '../../utils/skyColorsCalUtils';
 
 const weatherMapping = {
   'clear-day': 'CLEAR_DAY',
@@ -23,27 +23,24 @@ const dayMapping = {
   6: 'Saturday',
 };
 
-// CLEAR_DAY
-// CLEAR_NIGHT
-// PARTLY_CLOUDY_DAY
-// PARTLY_CLOUDY_NIGHT
-// CLOUDY
-// RAIN
-// SLEET
-// SNOW
-// WIND
-// FOG
 const ForecastItem = (props) => {
-  const { data } = props;
+  const { data, skyColor } = props;
+
+  // Use provided skyColor or calculate from current time
+  const baseSkyColor = skyColor || getSkyTopColor(getCurrentHour(null));
+
+  // Darken slightly for better visibility (15% darker)
+  const iconColor = darkenColor(baseSkyColor, 0.15);
+
   return (
     <div className="forecast-container align--center">
       <h2 className="card__forecast-day">{dayMapping[moment.unix(data.time).day()]}</h2>
       <ReactAnimatedWeather
         icon={weatherMapping[data.icon]}
-        color="#8650f6"
+        color={iconColor}
         size={50}
         animate
-        className="weather color--purple"
+        className="weather"
       />
       <div className="flex temp">
         <p className="card__forecast-temperature">{parseInt(data.temperatureMax, 10)}°</p>

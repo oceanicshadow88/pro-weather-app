@@ -13,7 +13,7 @@ function Main(props) {
                 <TodayWeatherCard data={props.data} timeOverride={props.timeOverride} />
                 <div className="flex detail-info-container flex-warp">
                     <SocialMedia data={props.data} searchKey={props.searchKey} />
-                    <Forecast data={props.data} />
+                    <Forecast data={props.data} timeOverride={props.timeOverride} />
                 </div>
             </main>
         );

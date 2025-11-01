@@ -79,7 +79,7 @@ const DashboardPage = (props) => {
             ) : (
                 showCard
             )}
-            <BackGround />
+            <BackGround timeOverride={timeOverride} />
         </div>
     );
 };

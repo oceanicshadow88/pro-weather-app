@@ -1,18 +1,20 @@
-.close{
-  transform: translateX(-100%);
+.close {
+    transform: translateX(-100%);
 }
 
-.open{
-  transform: translateX(0);
+.open {
+    transform: translateX(0);
 }
 
 @keyframes move_wave {
     0% {
         transform: translateX(0) translateZ(0) scaleY(1)
     }
+
     50% {
         transform: translateX(-25%) translateZ(0) scaleY(0.55)
     }
+
     100% {
         transform: translateX(-50%) translateZ(0) scaleY(1)
     }
@@ -38,7 +40,7 @@
     overflow: hidden;
     height: 100%;
     bottom: -1px;
-    background-image: linear-gradient(to top, #d146fe 20%, #8650f6 80%);
+    /* Background gradient is now set dynamically via inline styles in BackGround.js */
 }
 
 .bgTop {
@@ -92,42 +94,105 @@
     animation: move_wave 15s linear infinite;
 }
 
-@-webkit-keyframes fadeDown { from { -webkit-transform: translate3d(0, -100%, 0);transform: translate3d(0, -100%, 0); } to {  -webkit-transform: none;     transform: none; } }
-@-moz-keyframes fadeDown { from { -webkit-transform: translate3d(0, -100%, 0);transform: translate3d(0, -100%, 0); } to { -webkit-transform: none;     transform: none; } }
-@keyframes fadeDown { from { -webkit-transform: translate3d(0, -100%, 0);transform: translate3d(0, -100%, 0); } to { -webkit-transform: none;     transform: none; } }
+@-webkit-keyframes fadeDown {
+    from {
+        -webkit-transform: translate3d(0, -100%, 0);
+        transform: translate3d(0, -100%, 0);
+    }
+
+    to {
+        -webkit-transform: none;
+        transform: none;
+    }
+}
+
+@-moz-keyframes fadeDown {
+    from {
+        -webkit-transform: translate3d(0, -100%, 0);
+        transform: translate3d(0, -100%, 0);
+    }
+
+    to {
+        -webkit-transform: none;
+        transform: none;
+    }
+}
+
+@keyframes fadeDown {
+    from {
+        -webkit-transform: translate3d(0, -100%, 0);
+        transform: translate3d(0, -100%, 0);
+    }
+
+    to {
+        -webkit-transform: none;
+        transform: none;
+    }
+}
 
 .fade-down {
-    -webkit-animation:fadeDown ease-in-out 1;  /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
-    -moz-animation:fadeDown ease-in-out 1;
-    animation:fadeDown ease-in-out;
+    -webkit-animation: fadeDown ease-in-out 1;
+    /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
+    -moz-animation: fadeDown ease-in-out 1;
+    animation: fadeDown ease-in-out;
 
-    -webkit-animation-fill-mode:forwards;  /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
-    -moz-animation-fill-mode:forwards;
-    animation-fill-mode:forwards;
+    -webkit-animation-fill-mode: forwards;
+    /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
+    -moz-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
 
-    -webkit-animation-duration:.75s;
-    -moz-animation-duration:.75s;
-    animation-duration:.75s;
+    -webkit-animation-duration: .75s;
+    -moz-animation-duration: .75s;
+    animation-duration: .75s;
 }
 
 /*****************************************************************/
-@-webkit-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-@-moz-keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@-webkit-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@-moz-keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
 
 .fade-in {
-    opacity:0;  /* make things invisible upon start */
-    -webkit-animation:fadeIn ease-in 1;  /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
-    -moz-animation:fadeIn ease-in 1;
-    animation:fadeIn ease-in 1;
+    opacity: 0;
+    /* make things invisible upon start */
+    -webkit-animation: fadeIn ease-in 1;
+    /* call our keyframe named fadeIn, use animattion ease-in and repeat it only 1 time */
+    -moz-animation: fadeIn ease-in 1;
+    animation: fadeIn ease-in 1;
 
-    -webkit-animation-fill-mode:forwards;  /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
-    -moz-animation-fill-mode:forwards;
-    animation-fill-mode:forwards;
+    -webkit-animation-fill-mode: forwards;
+    /* this makes sure that after animation is done we remain at the last keyframe value (opacity: 1)*/
+    -moz-animation-fill-mode: forwards;
+    animation-fill-mode: forwards;
 
-    -webkit-animation-duration:1s;
-    -moz-animation-duration:1s;
-    animation-duration:1s;
+    -webkit-animation-duration: 1s;
+    -moz-animation-duration: 1s;
+    animation-duration: 1s;
 }
 
 .fade-in.one {
