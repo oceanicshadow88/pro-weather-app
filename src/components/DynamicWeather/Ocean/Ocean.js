@@ -44,15 +44,15 @@ class Ocean {
         const nightBottom = '#32508c'; // Bottom color (rgb: 50, 80, 140)
         const nightDash = '#2a3f5f';
 
-        // Sunrise colors (5-7)
-        const sunriseTop = '#3d5a80';
-        const sunriseBottom = '#1e3a5f';
-        const sunriseDash = '#5a7fa3';
+        // Sunrise colors (5-7) - match sky's orange/pink, but darker for ocean reflection
+        const sunriseTop = '#cc5566';  // Darker version of sky's #ff6b6b
+        const sunriseBottom = '#993344';  // Darker version for depth
+        const sunriseDash = '#dd7788';
 
-        // Sunset colors (17-19)
-        const sunsetTop = '#2d4a6b';
-        const sunsetBottom = '#1a2f4a';
-        const sunsetDash = '#4a6b8f';
+        // Sunset colors (17-19) - match sky's orange/red, but darker for ocean reflection
+        const sunsetTop = '#cc5a3a';  // Darker version of sky's #ff7849
+        const sunsetBottom = '#993322';  // Darker version for depth
+        const sunsetDash = '#dd7a55';
 
         let topColor, bottomColor, dashColor;
 
