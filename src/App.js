@@ -7,13 +7,13 @@ import DashboardPage from './pages/DashboardPage/DashboardPage';
 import Settings from './pages/Settings/Settings';
 import Logout from './containers/Auth/Logout/Logout';
 import * as action from './store/actions';
-import Login from './pages/Login/Login';
+import LoginPage from './pages/LoginPage/LoginPage';
 
 import SignUp from './pages/SignUp/SignUp';
 import Reset from './pages/Reset/Reset';
 import ProtectedRoute from './routes/ProtectedRoute/ProtectedRoute';
 import ForgotPage from './pages/ForgotPage/ForgotPage';
-import NotFound from './pages/NotFound/NotFound';
+import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 
 class App extends React.Component {
   // https://rawgit.com/darkskyapp/skycons/master/skycons.js
@@ -27,15 +27,15 @@ class App extends React.Component {
   render() {
     return (
       <Switch>
-        <Route path="/" exact component={Login} />
+        <Route path="/" exact component={LoginPage} />
         <Route path="/reset-password/:token" exact component={Reset} />
         <Route path="/forgot" exact component={ForgotPage} />
         <Route path="/sign-up" exact component={SignUp} />
         <Route path="/dashboard" exact component={DashboardPage} />
         <Route path="/settings" exact component={Settings} />
         <Route path="/logout" exact component={Logout} />
-        <Route path="/login" component={Login} />
-        <Route component={NotFound} />
+        <Route path="/login" component={LoginPage} />
+        <Route component={NotFoundPage} />
       </Switch>
     );
   }
