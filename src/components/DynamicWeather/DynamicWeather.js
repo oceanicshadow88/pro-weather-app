@@ -13,6 +13,7 @@ import Sun from './Sun/Sun';
 import Ocean from './Ocean/Ocean';
 import Sky from './Sky/Sky';
 import Airplane from './Airplane/Airplane';
+import Landmark from './Landmark/Landmark';
 
 const assets = [];
 
@@ -24,6 +25,7 @@ let sunInstance = null; // Store reference to sun for position updates
 let weatherDataRef = null; // Store reference to weather data
 let oceanInstance = null; // Store reference to ocean
 let skyInstance = null; // Store reference to sky
+let landmarkInstance = null; // Store reference to landmark
 
 // Helper function to get current hour (with minute consideration)
 // timeOverride: { hour: 0-23, minute: 0-59 } or null
@@ -457,6 +459,7 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
     sunInstance = null;
     oceanInstance = null;
     skyInstance = null;
+    landmarkInstance = null;
     // Update data reference
     weatherDataRef = data;
     // start spawning
@@ -504,6 +507,10 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
     // Spawn ocean at the bottom
     oceanInstance = new Ocean(canvas, context, currentHourFloat);
     assets.push(oceanInstance);
+
+    // Spawn landmark (above ocean, right side)
+    landmarkInstance = new Landmark(canvas, context);
+    assets.push(landmarkInstance);
 
     const currentData = weatherDataRef || data;
     const weather = spawnFunctionsRef.current[currentData.currently.icon];
@@ -640,12 +647,17 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
         oceanInstance.draw();
       }
 
+      // Draw landmark (above ocean, right side)
+      if (landmarkInstance) {
+        landmarkInstance.draw();
+      }
+
       // Draw each asset, if false, remove particle from assets
       // Skip sun/moon instances since we already drew them above
       for (let i = 0, n = assets.length; i < n; i += 1) {
         const asset = assets[i];
-        // Skip if it's the sun/moon (already drawn) or sky/ocean (already drawn)
-        if (asset === sunInstance || asset === moonInstance || asset === skyInstance || asset === oceanInstance) {
+        // Skip if it's the sun/moon (already drawn) or sky/ocean/landmark (already drawn)
+        if (asset === sunInstance || asset === moonInstance || asset === skyInstance || asset === oceanInstance || asset === landmarkInstance) {
           continue;
         }
         if (!asset.draw()) {
@@ -714,6 +726,7 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
       sunInstance = null;
       oceanInstance = null;
       skyInstance = null;
+      landmarkInstance = null;
       weatherDataRef = null;
 
       // Clear canvas and context references
@@ -765,6 +778,11 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
     // Update sky size if needed
     if (skyInstance && skyInstance.updateCanvasSize) {
       skyInstance.updateCanvasSize(currentCanvas);
+    }
+
+    // Update landmark size if needed
+    if (landmarkInstance && landmarkInstance.updateCanvasSize) {
+      landmarkInstance.updateCanvasSize(currentCanvas);
     }
   }, [width, height]);
 

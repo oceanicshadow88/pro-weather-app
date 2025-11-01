@@ -32,12 +32,12 @@ class TodayWeatherCard extends React.Component {
                 />
                 <div className="card__current-temperature">
                     <div className="center">
-                        <span className="card__current-temperature">
+                        <span>
                             {parseInt(data.currently.temperature, 10)}°
                         </span>
                     </div>
                     <div className="center">
-                        <p><span className="card__current-weather">{data.currently.summary}</span></p>
+                        <p className="clear-margin clear-padding card_current_summary">{data.currently.summary}</p>
                     </div>
                     <ul className="card__current-details-list flex space-between list-style--disable center">
                         <li className="card__current-details">

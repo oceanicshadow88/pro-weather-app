@@ -47,7 +47,12 @@
 }
 
 .card__current-temperature {
-  padding: 70px 20px 70px 40px;
+  padding: 50px 20px 50px 40px;
+}
+
+.card_current_summary {
+  font-size: 25px;
+  padding: 20px;
 }
 
 .card__current-details-list {
