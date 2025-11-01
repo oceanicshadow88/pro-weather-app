@@ -9,22 +9,22 @@ class SocialMedia extends React.Component {
     this.state = {
       show: 0,
     };
-    this.socialMedia = [
-      <Twitter searchKey={this.props.searchKey} />,
-      <Facebook searchKey={this.props.searchKey} />,
-    ];
   }
 
   switchSocialMedia = () => {
     this.setState((prevState) => ({
-      show: prevState.show < this.socialMedia.length - 1 ? (prevState.show += 1) : 0,
+      show: prevState.show < 1 ? (prevState.show + 1) : 0,
     }));
   };
 
   render() {
+    const socialMedia = [
+      <Twitter key="twitter" searchKey={this.props.searchKey} timeOverride={this.props.timeOverride} />,
+      <Facebook key="facebook" searchKey={this.props.searchKey} timeOverride={this.props.timeOverride} />,
+    ];
     return (
       <section className="card__social-media">
-        {this.socialMedia[this.state.show]}
+        {socialMedia[this.state.show]}
         <div className="center next-container">
           <button className="next__text" onClick={this.switchSocialMedia}>
             NEXT
