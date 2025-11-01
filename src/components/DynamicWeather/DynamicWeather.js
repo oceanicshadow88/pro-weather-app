@@ -12,6 +12,7 @@ import Moon from './Moon/Moon';
 import Sun from './Sun/Sun';
 import Ocean from './Ocean/Ocean';
 import Sky from './Sky/Sky';
+import Airplane from './Airplane/Airplane';
 
 const assets = [];
 
@@ -320,6 +321,17 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
     timers.wind = setTimeout(spawnLeaves, randomRange(500, 1500));
   };
 
+  const spawnAirplane = () => {
+    if (!canvas || !context) return;
+
+    // Spawn airplane (flies from right to left, takes 10 seconds)
+    const airplane = new Airplane(canvas, context);
+    assets.push(airplane);
+
+    // Schedule next airplane in 15 seconds
+    timers.airplane = setTimeout(spawnAirplane, 150000);
+  };
+
   const spawnSun = () => {
     // Only spawn sun if it doesn't already exist
     if (sunInstance) {
@@ -458,6 +470,9 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
       hasStartedAnimationRef.current = true;
     }
     spawnCloud();
+
+    // Start airplane spawning (every 15 seconds)
+    spawnAirplane();
 
     // Spawn sun or moon based on time of day
     const currentHour = getCurrentHourInt(timeOverrideRef.current);
