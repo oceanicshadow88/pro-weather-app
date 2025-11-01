@@ -1,4 +1,3 @@
-
 /**************************/
 .flex {
     display: flex;
@@ -35,12 +34,21 @@
     flex: 1;
 }
 
+.clear-padding {
+    padding: 0;
+}
+
+.clear-margin {
+    margin: 0 !important;
+}
+
 .list-style--disable {
     list-style: none;
     margin: 0;
     padding: 0;
     margin: 0;
 }
+
 /**************************/
 .color--rain-blue {
     color: #2f57fd;
@@ -62,28 +70,29 @@
 .color--white {
     color: white;
 }
-.color--red{
+
+.color--red {
     color: red;
 }
 
 
-.color--purple{
-    color:#8650f6;
+.color--purple {
+    color: #8650f6;
 }
 
-.error{
-    top:50%;
+.error {
+    top: 50%;
     left: 0;
     right: 0;
-    color:white;
+    color: white;
     position: absolute;
 }
 
-.error-message{
+.error-message {
     width: 100%;
 }
 
-button:focus{
+button:focus {
     outline: 0;
 }
 
@@ -91,20 +100,20 @@ button:focus{
     flex-direction: column;
 }
 
-.loading--fixed{
-    top:50%;
+.loading--fixed {
+    top: 50%;
     left: 0;
     right: 0;
-    color:white;
+    color: white;
     position: fixed;
 }
 
-.color--purple{
-    color:#8650f6;
+.color--purple {
+    color: #8650f6;
 }
 
 
-.color--low{
+.color--low {
     color: #545454 !important;
-    font-size: 14px!important;
+    font-size: 14px !important;
 }
