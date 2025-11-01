@@ -46,10 +46,10 @@ const getCurrentHourInt = (timeOverride) => {
 /**
  * Calculate sun position based on hour of day
  * Sun shows during 5am-7pm (5-19)
- * 24-hour cycle:
- * 12:00pm (12) = top
- * 6:00pm (18) = bottom
- * 6:00am (6) = top (from previous night)
+ * Journey:
+ * 5:00 AM = bottom (below screen or just visible)
+ * 12:00 PM (noon) = top
+ * 7:00 PM = bottom (below screen or just visible)
  */
 const calculateSunPosition = (hour, sunRadius = 50, currentCanvas = null) => {
   // Use provided canvas or fallback to module-level canvas
@@ -61,24 +61,25 @@ const calculateSunPosition = (hour, sunRadius = 50, currentCanvas = null) => {
 
   let progress = 0;
 
-  if (hour >= 6 && hour < 12) {
-    // 6am-12pm: top to bottom (progress 0 to 1)
-    progress = (hour - 6) / 6;
-  } else if (hour >= 12 && hour < 18) {
-    // 12pm-6pm: bottom to top (progress 1 to 0)
-    progress = 1 - (hour - 12) / 6;
-  } else if (hour >= 5 && hour < 6) {
-    // 5am-6am: at top
-    progress = 0;
-  } else if (hour >= 18 && hour < 19) {
-    // 6pm-7pm: at bottom
+  if (hour >= 5 && hour < 12) {
+    // 5am-12pm: bottom to top (progress 1 to 0)
+    // At 5 AM: progress = 1 (bottom)
+    // At 12 PM: progress = 0 (top)
+    progress = 1 - (hour - 5) / 7;
+  } else if (hour >= 12 && hour < 19) {
+    // 12pm-7pm: top to bottom (progress 0 to 1)
+    // At 12 PM: progress = 0 (top)
+    // At 7 PM: progress = 1 (bottom)
+    progress = (hour - 12) / 7;
+  } else {
+    // Outside sun hours (shouldn't happen, but set to bottom)
     progress = 1;
   }
 
   // Clamp progress between 0 and 1
   progress = Math.max(0, Math.min(1, progress));
 
-  // Calculate x and y positions (same as moon - to the left of city name)
+  // Calculate x and y positions (to the left of city name)
   const canvasWidth = canvasToUse.width || canvasToUse.clientWidth || 948;
   const cityLocationRight = canvasWidth;
   const estimatedCityNameWidth = 200;
@@ -86,9 +87,13 @@ const calculateSunPosition = (hour, sunRadius = 50, currentCanvas = null) => {
   const x = Math.max(sunRadius + 10, cityLocationRight - estimatedCityNameWidth - spacing - sunRadius);
 
   const canvasHeight = canvasToUse.height || 350;
-  const topPadding = sunRadius + 20;
-  const bottomPadding = canvasHeight - sunRadius - 20;
-  const y = Math.max(topPadding, Math.min(bottomPadding, topPadding + (bottomPadding - topPadding) * progress));
+  const topPadding = sunRadius - 20;
+  const bottomPadding = canvasHeight + sunRadius - 50; // Allow sun to go below screen (negative y or beyond canvas)
+
+  // Progress 0 = top, Progress 1 = bottom (below screen)
+  // When progress = 1, sun should be below the visible canvas
+  const yRange = bottomPadding - topPadding;
+  const y = topPadding + (yRange * progress);
 
   return { x, y };
 };
@@ -140,9 +145,12 @@ const calculateMoonPosition = (hour, moonRadius = 50, currentCanvas = null) => {
   const x = Math.max(moonRadius + 10, cityLocationRight - estimatedCityNameWidth - spacing - moonRadius);
 
   const canvasHeight = canvasToUse.height || 350;
-  const topPadding = moonRadius + 20;
-  const bottomPadding = canvasHeight - moonRadius - 20;
-  const y = Math.max(topPadding, Math.min(bottomPadding, topPadding + (bottomPadding - topPadding) * progress));
+  const topPadding = moonRadius - 20; // Allow moon to go above screen
+  const bottomPadding = canvasHeight + moonRadius; // Allow moon to go below screen
+
+  // Progress 0 = top (above screen), Progress 1 = bottom (below screen)
+  const yRange = bottomPadding - topPadding;
+  const y = topPadding + (yRange * progress);
 
   return { x, y };
 };
@@ -192,22 +200,26 @@ const getShowTime = (hours) => {
 };
 
 
-const preLoadImageAssets = (callback) => {
+const preLoadImageAssets = (callback, cleanupRef = null) => {
   let imageAssetsCount = 0;
   let imageAssetsLoadedCount = 0;
+  let isCancelled = false;
 
   if (imageAssetsLoaded) {
-    if (callback) {
+    if (callback && !isCancelled) {
       callback();
     }
-    return;
+    return () => { }; // Return empty cleanup function
   }
 
+  const cleanupFunctions = [];
+
   const loadedHandler = () => {
+    if (isCancelled) return;
     imageAssetsLoadedCount += 1;
     if (imageAssetsLoadedCount === imageAssetsCount) {
       imageAssetsLoaded = true;
-      if (callback) {
+      if (callback && !isCancelled) {
         callback();
       }
     }
@@ -219,7 +231,27 @@ const preLoadImageAssets = (callback) => {
     imageAsset.image = new Image();
     imageAsset.image.onload = loadedHandler;
     imageAsset.image.src = imageAsset.fileName;
+
+    // Store cleanup function to remove onload handler
+    cleanupFunctions.push(() => {
+      if (imageAsset.image) {
+        imageAsset.image.onload = null;
+      }
+    });
   }
+
+  // Return cleanup function
+  const cleanup = () => {
+    isCancelled = true;
+    cleanupFunctions.forEach(fn => fn());
+  };
+
+  // Store cleanup ref if provided
+  if (cleanupRef) {
+    cleanupRef.current = cleanup;
+  }
+
+  return cleanup;
 };
 
 const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
@@ -229,6 +261,8 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
   const timeOverrideRef = useRef(timeOverride);
   const animationFrameIdRef = useRef(null);
   const isMountedRef = useRef(true); // Track if component is mounted
+  const imageCleanupRef = useRef(null); // Cleanup function for image loading
+  const hasStartedAnimationRef = useRef(false); // Track if animation has been started
 
   // Update timeOverride ref when prop changes
   useEffect(() => {
@@ -354,11 +388,11 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
       const pos = calculateMoonPosition(currentHour, moonRadius, canvas);
       x = pos.x;
       y = pos.y;
-      // Fallback to center if position seems off-screen
-      if (x < 0 || x > canvas.width || y < 0 || y > canvas.height) {
-        console.warn('Moon position off-screen, using center:', { x, y, canvasWidth: canvas.width, canvasHeight: canvas.height });
+      // Moon can be off-screen (above or below canvas) - that's expected behavior
+      // Only warn if x is off-screen (which shouldn't happen)
+      if (x < 0 || x > canvas.width) {
+        console.warn('Moon x position off-screen, using center:', { x, y, canvasWidth: canvas.width, canvasHeight: canvas.height });
         x = canvas.width / 2;
-        y = canvas.height / 2;
       }
     } else {
       // Fallback to center if canvas dimensions not ready
@@ -418,7 +452,11 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
   };
 
   const beginSpawning = () => {
-    animateRef.current();
+    // Don't manually trigger animation - it's already running in the loop
+    // animateRef.current() would cause double execution
+    if (!hasStartedAnimationRef.current && animateRef.current) {
+      hasStartedAnimationRef.current = true;
+    }
     spawnCloud();
 
     // Spawn sun or moon based on time of day
@@ -568,12 +606,7 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
         skyInstance.draw();
       }
 
-      // Draw ocean
-      if (oceanInstance) {
-        oceanInstance.draw();
-      }
-
-      // Draw sun or moon FIRST (before other assets) to ensure visibility
+      // ALWAYS draw sun/moon BEFORE ocean (behind ocean) - no conditions
       if (sunInstance) {
         const drawResult = sunInstance.draw();
         if (!drawResult) {
@@ -585,6 +618,11 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
         if (!drawResult) {
           console.warn('Moon draw returned false');
         }
+      }
+
+      // Draw ocean (always drawn after sun/moon so it appears in front)
+      if (oceanInstance) {
+        oceanInstance.draw();
       }
 
       // Draw each asset, if false, remove particle from assets
@@ -606,16 +644,35 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
     };
 
     animateRef.current = animate;
+    hasStartedAnimationRef.current = false;
 
-    preLoadImageAssets(() => {
-      setConditionReady();
-    });
+    // Start the animation loop
+    animationFrameIdRef.current = window.requestAnimationFrame(animate);
+
+    // Load images and start spawning (only call setConditionReady once)
+    const imageCleanup = preLoadImageAssets(() => {
+      if (isMountedRef.current) {
+        setConditionReady();
+      }
+    }, imageCleanupRef);
+
+    // Also call setConditionReady immediately if images already loaded
     setConditionReady();
 
     // Cleanup
     return () => {
       // Mark component as unmounted to stop animation loop
       isMountedRef.current = false;
+      hasStartedAnimationRef.current = false;
+
+      // Cleanup image loading handlers
+      if (imageCleanupRef.current) {
+        imageCleanupRef.current();
+        imageCleanupRef.current = null;
+      }
+      if (imageCleanup) {
+        imageCleanup();
+      }
 
       // Cancel animation frame
       if (animationFrameIdRef.current) {

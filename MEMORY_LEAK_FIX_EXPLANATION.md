@@ -173,6 +173,100 @@ This allows JavaScript's garbage collector to clean up these objects from memory
 
 ---
 
+### Problem 6: Image Loading Handlers Never Cleaned Up
+
+**Simple Explanation:**
+> Images were loading in the background with "call me when done" notes attached, but when you left the page, those notes were never removed. So when images finished loading, they'd try to call a function that no longer existed.
+
+**Code Evidence - BEFORE:**
+```javascript
+// Line 228 (old code)
+imageAsset.image.onload = loadedHandler;  // ❌ Handler attached forever
+imageAsset.image.src = imageAsset.fileName;
+
+// No cleanup when component unmounts!
+// If component unmounts while image is loading:
+// 1. Image keeps loading
+// 2. onload fires after unmount
+// 3. Tries to call setConditionReady()
+// 4. Tries to access unmounted component state
+// 5. Memory leak! ❌
+```
+
+**Problem:** Image `onload` handlers were attached but never removed. If the component unmounted while images were still loading, those handlers would fire later and try to access unmounted component state.
+
+**Code Fix - AFTER:**
+```javascript
+// Line 235-240 - Store cleanup functions
+cleanupFunctions.push(() => {
+  if (imageAsset.image) {
+    imageAsset.image.onload = null;  // ✅ Remove handler
+  }
+});
+
+// Line 244-247 - Return cleanup function
+const cleanup = () => {
+  isCancelled = true;
+  cleanupFunctions.forEach(fn => fn());  // ✅ Remove all handlers
+};
+
+// Line 668-675 - Cleanup in useEffect return
+if (imageCleanupRef.current) {
+  imageCleanupRef.current();  // ✅ Remove handlers when unmounting
+}
+```
+
+---
+
+### Problem 7: Image Callbacks Executing After Unmount
+
+**Simple Explanation:**
+> Even if we removed the handlers, the callback function itself could still execute if it was already queued. It's like ordering pizza and canceling, but the pizza still arrives and tries to charge you.
+
+**Code Evidence - BEFORE:**
+```javascript
+// Line 214 (old code)
+const loadedHandler = () => {
+  imageAssetsLoadedCount += 1;
+  if (imageAssetsLoadedCount === imageAssetsCount) {
+    callback();  // ❌ Could execute after unmount!
+  }
+};
+
+// Line 618 (old code)
+preLoadImageAssets(() => {
+  setConditionReady();  // ❌ No check if component still mounted!
+});
+```
+
+**Problem:** The callback could execute after the component unmounted, trying to call `setConditionReady()` which references stale closures and unmounted state.
+
+**Code Fix - AFTER:**
+```javascript
+// Line 206 - Add cancelled flag
+let isCancelled = false;
+
+// Line 217-226 - Check cancelled flag
+const loadedHandler = () => {
+  if (isCancelled) return;  // ✅ Don't execute if cancelled
+  imageAssetsLoadedCount += 1;
+  if (imageAssetsLoadedCount === imageAssetsCount) {
+    if (callback && !isCancelled) {  // ✅ Double check
+      callback();
+    }
+  }
+};
+
+// Line 653-656 - Check mounted state before executing
+preLoadImageAssets(() => {
+  if (isMountedRef.current) {  // ✅ Only execute if still mounted
+    setConditionReady();
+  }
+}, imageCleanupRef);
+```
+
+---
+
 ## ✅ The Solution (What I Fixed)
 
 ### Fix 1: Added a Stop Flag (`isMountedRef`)
@@ -291,6 +385,76 @@ Memory: Clean ✅
 3. ✅ Empties all arrays
 4. ✅ Resets all references
 5. ✅ Clears everything from memory
+6. ✅ Removes image loading handlers
+7. ✅ Prevents callbacks from executing after unmount
 
 **Result:** No more memory leaks! Memory usage stays constant instead of growing forever.
+
+---
+
+## 🔧 Additional Fixes (Round 2)
+
+### Fix 4: Image Loading Handler Cleanup
+
+```javascript
+// Line 235-240 - Create cleanup for each image
+cleanupFunctions.push(() => {
+  if (imageAsset.image) {
+    imageAsset.image.onload = null;  // Remove handler
+  }
+});
+
+// Line 244-254 - Return cleanup function
+const cleanup = () => {
+  isCancelled = true;
+  cleanupFunctions.forEach(fn => fn());  // Remove all handlers
+};
+
+// Line 668-675 - Call cleanup on unmount
+if (imageCleanupRef.current) {
+  imageCleanupRef.current();
+  imageCleanupRef.current = null;
+}
+```
+
+**Real-world analogy:** Like canceling all your pizza orders and removing your phone number from their system when you move out.
+
+---
+
+### Fix 5: Cancelled Flag and Mounted Check
+
+```javascript
+// Line 206 - Track if cancelled
+let isCancelled = false;
+
+// Line 217 - Check before executing
+if (isCancelled) return;  // "Was this cancelled? Don't execute!"
+
+// Line 653-656 - Check mounted before callback
+preLoadImageAssets(() => {
+  if (isMountedRef.current) {  // "Are we still here?"
+    setConditionReady();  // Only execute if yes
+  }
+}, imageCleanupRef);
+```
+
+**Real-world analogy:** Like checking if you're still at the address before delivering mail. If you moved, don't deliver.
+
+---
+
+## 📋 Complete Cleanup Checklist
+
+When the component unmounts, we now clean up:
+
+1. ✅ Animation frame (cancel `requestAnimationFrame`)
+2. ✅ All timers (`setTimeout`, `setInterval`)
+3. ✅ Assets array (empty completely)
+4. ✅ All instance references (moon, sun, ocean, sky)
+5. ✅ Canvas and context references
+6. ✅ Image `onload` handlers (remove all)
+7. ✅ Image loading callbacks (prevent execution)
+8. ✅ Animation loop flag (stop execution)
+9. ✅ Animate ref (clear reference)
+
+**Total:** 9 different types of cleanup to prevent memory leaks!
 
