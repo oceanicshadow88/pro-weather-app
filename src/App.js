@@ -12,7 +12,7 @@ import Login from './pages/Login/Login';
 import SignUp from './pages/SignUp/SignUp';
 import Reset from './pages/Reset/Reset';
 import ProtectedRoute from './routes/ProtectedRoute/ProtectedRoute';
-import Forgot from './pages/Forgot/Forgot';
+import ForgotPage from './pages/ForgotPage/ForgotPage';
 import NotFound from './pages/NotFound/NotFound';
 
 class App extends React.Component {
@@ -29,7 +29,7 @@ class App extends React.Component {
       <Switch>
         <Route path="/" exact component={Login} />
         <Route path="/reset-password/:token" exact component={Reset} />
-        <Route path="/forgot" exact component={Forgot} />
+        <Route path="/forgot" exact component={ForgotPage} />
         <Route path="/sign-up" exact component={SignUp} />
         <Route path="/dashboard" exact component={DashboardPage} />
         <Route path="/settings" exact component={Settings} />
