@@ -1,42 +1,36 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './Modal.css';
 
 import Backdrop from '../Backdrop/Backdrop';
 
-class Modal extends React.Component {
-  componentDidMount() {
-    const { show } = this.props;
+const Modal = ({ show, modalClosed, children, class: className }) => {
+  useEffect(() => {
     if (show) {
       document.body.style.overflow = 'hidden';
     }
-  }
 
-  componentWillUnmount() {
-    document.body.style.overflow = 'unset';
-  }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [show]);
 
-  shouldComponentUpdate(nextProps) {
-    const { show, children } = this.props;
-    return nextProps.show !== show || nextProps.children !== children;
-  }
+  return (
+    <>
+      <Backdrop show={show} click={modalClosed} />
+      <div
+        className={`Modal ${className || ''}`}
+        style={{
+          transform: show ? 'translateY(0)' : 'translateY(-200vh)',
+          opacity: show ? '1' : 0,
+        }}
+      >
+        {children}
+      </div>
+    </>
+  );
+};
 
-  render() {
-    const { show, modalClosed, children } = this.props;
-    return (
-      <>
-        <Backdrop show={show} click={modalClosed} />
-        <div
-          className={`Modal ${this.props.class}`}
-          style={{
-            transform: show ? 'translateY(0)' : 'translateY(-200vh)',
-            opacity: show ? '1' : 0,
-          }}
-        >
-          {children}
-        </div>
-      </>
-    );
-  }
-}
-
-export default Modal;
+// Use React.memo to optimize re-renders (equivalent to shouldComponentUpdate)
+export default React.memo(Modal, (prevProps, nextProps) => {
+  return prevProps.show === nextProps.show && prevProps.children === nextProps.children;
+});
