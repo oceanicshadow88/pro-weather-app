@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
 import { Route, withRouter, Switch } from 'react-router-dom';
 import { loadReCaptcha } from 'react-recaptcha-google';
@@ -15,31 +15,28 @@ import ProtectedRoute from './routes/ProtectedRoute/ProtectedRoute';
 import ForgotPage from './pages/ForgotPage/ForgotPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
 
-class App extends React.Component {
+const App = ({ onTryAutoSignup }) => {
   // https://rawgit.com/darkskyapp/skycons/master/skycons.js
   // https://codepen.io/Gerwinnz/pen/RVzrRG
-  componentDidMount() {
-    const { onTryAutoSignup } = this.props;
+  useEffect(() => {
     loadReCaptcha();
     onTryAutoSignup();
-  }
+  }, [onTryAutoSignup]);
 
-  render() {
-    return (
-      <Switch>
-        <Route path="/" exact component={LoginPage} />
-        <Route path="/reset-password/:token" exact component={ResetPage} />
-        <Route path="/forgot" exact component={ForgotPage} />
-        <Route path="/sign-up" exact component={SignUpPage} />
-        <Route path="/dashboard" exact component={DashboardPage} />
-        <Route path="/settings" exact component={SettingsPage} />
-        <Route path="/logout" exact component={Logout} />
-        <Route path="/login" component={LoginPage} />
-        <Route component={NotFoundPage} />
-      </Switch>
-    );
-  }
-}
+  return (
+    <Switch>
+      <Route path="/" exact component={LoginPage} />
+      <Route path="/reset-password/:token" exact component={ResetPage} />
+      <Route path="/forgot" exact component={ForgotPage} />
+      <Route path="/sign-up" exact component={SignUpPage} />
+      <Route path="/dashboard" exact component={DashboardPage} />
+      <Route path="/settings" exact component={SettingsPage} />
+      <Route path="/logout" exact component={Logout} />
+      <Route path="/login" component={LoginPage} />
+      <Route component={NotFoundPage} />
+    </Switch>
+  );
+};
 
 const mapDispatchToProps = (dispatch) => ({
   // onTryAutoSettings: () => dispatch(action.getSettings()),
