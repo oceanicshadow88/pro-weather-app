@@ -24,10 +24,10 @@ const dayMapping = {
 };
 
 const ForecastItem = (props) => {
-  const { data, skyColor } = props;
+  const { data, skyColor, skyGradientParams } = props;
 
   // Use provided skyColor or calculate from current time
-  const baseSkyColor = skyColor || getSkyTopColor(getCurrentHour(null));
+  const baseSkyColor = skyColor || getSkyTopColor(getCurrentHour(null), skyGradientParams);
 
   // Darken slightly for better visibility (15% darker)
   const iconColor = darkenColor(baseSkyColor, 0.15);

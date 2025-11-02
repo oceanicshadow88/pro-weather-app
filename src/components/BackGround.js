@@ -5,7 +5,7 @@ import mid from '../img/wave-bot.png';
 import top from '../img/wave-bot.png';
 import { getSkyGradientColors, getCurrentHour } from '../utils/skyColorsCalUtils';
 
-function BackGround({ timeOverride = null }) {
+function BackGround({ timeOverride = null, skyGradientParams = null }) {
   const Background = bot;
   const Background2 = mid;
   const Background3 = top;
@@ -14,7 +14,7 @@ function BackGround({ timeOverride = null }) {
   useEffect(() => {
     const updateWaveColor = () => {
       const hour = getCurrentHour(timeOverride);
-      const { topColor, bottomColor } = getSkyGradientColors(hour);
+      const { topColor, bottomColor } = getSkyGradientColors(hour, skyGradientParams);
       setWaveGradient(`linear-gradient(to top, ${bottomColor} 20%, ${topColor} 80%)`);
     };
 
@@ -34,7 +34,7 @@ function BackGround({ timeOverride = null }) {
         clearInterval(interval);
       }
     };
-  }, [timeOverride]);
+  }, [timeOverride, skyGradientParams]);
 
   return (
     <section className="waveWrapper waveAnimation">

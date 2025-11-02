@@ -1,19 +1,23 @@
 import { getSkyGradientColors, hexToRgb } from '../../../utils/skyColorsCalUtils';
 
 class Sky {
-    constructor(canvas, context, hour) {
+    constructor(canvas, context, hour, skyGradientParams = null) {
         this.canvas = canvas;
         this.context = context;
         this.hour = hour;
+        this.skyGradientParams = skyGradientParams;
     }
 
-    updateHour(hour) {
+    updateHour(hour, skyGradientParams = null) {
         this.hour = hour;
+        if (skyGradientParams !== null) {
+            this.skyGradientParams = skyGradientParams;
+        }
     }
 
     getBackgroundGradient(hour) {
         // Use shared utility function for gradient colors
-        const colors = getSkyGradientColors(hour);
+        const colors = getSkyGradientColors(hour, this.skyGradientParams);
 
         // Convert hex to rgb format for canvas gradient
         const rgbTop = hexToRgb(colors.topColor);

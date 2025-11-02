@@ -16,6 +16,7 @@ const DashboardPage = (props) => {
     const [error, setError] = useState(false);
     const [searchKey, setSearchKey] = useState('sydney');
     const [timeOverride, setTimeOverride] = useState(null);
+    const [skyGradientParams, setSkyGradientParams] = useState(null);
 
     const loadDefaultData = async () => {
         try {
@@ -65,13 +66,17 @@ const DashboardPage = (props) => {
             isLoaded={isLoaded}
             searchKey={searchKey}
             timeOverride={timeOverride}
+            skyGradientParams={skyGradientParams}
         />
     );
 
     return (
         <div className="DashboardPage">
             <Header searchPressCallback={handleSearchPress} />
-            <TimeControl onTimeChange={(timeOverride) => setTimeOverride(timeOverride)} />
+            <TimeControl onTimeChange={(timeOverride, skyGradientParams) => {
+                setTimeOverride(timeOverride);
+                setSkyGradientParams(skyGradientParams);
+            }} />
             {!isLoaded ? (
                 <div className="loading--fixed">
                     <LoaderWeather />
@@ -79,7 +84,7 @@ const DashboardPage = (props) => {
             ) : (
                 showCard
             )}
-            <BackGround timeOverride={timeOverride} />
+            <BackGround timeOverride={timeOverride} skyGradientParams={skyGradientParams} />
         </div>
     );
 };

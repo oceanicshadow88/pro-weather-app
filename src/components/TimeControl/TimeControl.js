@@ -8,13 +8,21 @@ class TimeControl extends React.Component {
             hour: new Date().getHours(),
             minute: new Date().getMinutes(),
             enabled: false,
+            skyGradientParams: {
+                solarAltitudeDeg: 0,
+                highCloudCoverage: 0,
+                aerosolConcentration: 0,
+                relativeHumidity: 0,
+                isAfterRain: false,
+                hasVolcanicAerosol: false,
+            },
         };
     }
 
     componentDidMount() {
         // Initialize with current time
         if (this.props.onTimeChange) {
-            this.props.onTimeChange(null); // Start with null (real time)
+            this.props.onTimeChange(null, this.state.skyGradientParams); // Start with null (real time)
         }
     }
 
@@ -22,7 +30,7 @@ class TimeControl extends React.Component {
         const hour = parseInt(e.target.value, 10);
         if (hour >= 0 && hour <= 23) {
             this.setState({ hour });
-            this.updateTime(hour, this.state.minute, this.state.enabled);
+            this.updateTime(hour, this.state.minute, this.state.enabled, this.state.skyGradientParams);
         }
     };
 
@@ -30,14 +38,14 @@ class TimeControl extends React.Component {
         const minute = parseInt(e.target.value, 10);
         if (minute >= 0 && minute <= 59) {
             this.setState({ minute });
-            this.updateTime(this.state.hour, minute, this.state.enabled);
+            this.updateTime(this.state.hour, minute, this.state.enabled, this.state.skyGradientParams);
         }
     };
 
     handleToggle = (e) => {
         const enabled = e.target.checked;
         this.setState({ enabled });
-        this.updateTime(this.state.hour, this.state.minute, enabled);
+        this.updateTime(this.state.hour, this.state.minute, enabled, this.state.skyGradientParams);
     };
 
     handleReset = () => {
@@ -45,21 +53,30 @@ class TimeControl extends React.Component {
         const hour = now.getHours();
         const minute = now.getMinutes();
         this.setState({ hour, minute, enabled: false });
-        this.updateTime(hour, minute, false);
+        this.updateTime(hour, minute, false, this.state.skyGradientParams);
     };
 
-    updateTime = (hour, minute, enabled) => {
+    handleSkyParamChange = (paramName, value) => {
+        const newParams = {
+            ...this.state.skyGradientParams,
+            [paramName]: typeof value === 'boolean' ? value : parseFloat(value),
+        };
+        this.setState({ skyGradientParams: newParams });
+        this.updateTime(this.state.hour, this.state.minute, this.state.enabled, newParams);
+    };
+
+    updateTime = (hour, minute, enabled, skyGradientParams) => {
         if (this.props.onTimeChange) {
             if (enabled) {
-                this.props.onTimeChange({ hour, minute });
+                this.props.onTimeChange({ hour, minute }, skyGradientParams || this.state.skyGradientParams);
             } else {
-                this.props.onTimeChange(null); // null means use real time
+                this.props.onTimeChange(null, skyGradientParams || this.state.skyGradientParams); // null means use real time
             }
         }
     };
 
     render() {
-        const { hour, minute, enabled } = this.state;
+        const { hour, minute, enabled, skyGradientParams } = this.state;
 
         return (
             <div className="time-control">
@@ -100,6 +117,81 @@ class TimeControl extends React.Component {
                             disabled={!enabled}
                             className="time-control__input"
                         />
+                    </div>
+                </div>
+                <div className="time-control__section">
+                    <h4 className="time-control__section-title">Sky Gradient Parameters</h4>
+                    <div className="time-control__input-group">
+                        <label htmlFor="solarAltitudeDeg">Solar Altitude (deg)</label>
+                        <input
+                            id="solarAltitudeDeg"
+                            type="number"
+                            step="0.1"
+                            value={skyGradientParams.solarAltitudeDeg}
+                            onChange={(e) => this.handleSkyParamChange('solarAltitudeDeg', e.target.value)}
+                            className="time-control__input"
+                        />
+                    </div>
+                    <div className="time-control__input-group">
+                        <label htmlFor="highCloudCoverage">High Cloud Coverage</label>
+                        <input
+                            id="highCloudCoverage"
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={skyGradientParams.highCloudCoverage}
+                            onChange={(e) => this.handleSkyParamChange('highCloudCoverage', e.target.value)}
+                            className="time-control__input"
+                        />
+                    </div>
+                    <div className="time-control__input-group">
+                        <label htmlFor="aerosolConcentration">Aerosol Concentration</label>
+                        <input
+                            id="aerosolConcentration"
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={skyGradientParams.aerosolConcentration}
+                            onChange={(e) => this.handleSkyParamChange('aerosolConcentration', e.target.value)}
+                            className="time-control__input"
+                        />
+                    </div>
+                    <div className="time-control__input-group">
+                        <label htmlFor="relativeHumidity">Relative Humidity</label>
+                        <input
+                            id="relativeHumidity"
+                            type="number"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={skyGradientParams.relativeHumidity}
+                            onChange={(e) => this.handleSkyParamChange('relativeHumidity', e.target.value)}
+                            className="time-control__input"
+                        />
+                    </div>
+                    <div className="time-control__input-group">
+                        <label className="time-control__checkbox-label">
+                            <input
+                                type="checkbox"
+                                checked={skyGradientParams.isAfterRain}
+                                onChange={(e) => this.handleSkyParamChange('isAfterRain', e.target.checked)}
+                                className="time-control__checkbox"
+                            />
+                            <span>After Rain</span>
+                        </label>
+                    </div>
+                    <div className="time-control__input-group">
+                        <label className="time-control__checkbox-label">
+                            <input
+                                type="checkbox"
+                                checked={skyGradientParams.hasVolcanicAerosol}
+                                onChange={(e) => this.handleSkyParamChange('hasVolcanicAerosol', e.target.checked)}
+                                className="time-control__checkbox"
+                            />
+                            <span>Volcanic Aerosol</span>
+                        </label>
                     </div>
                 </div>
                 <button

@@ -84,32 +84,40 @@ export const SKY_COLORS = {
  * Get sky top color based on hour (simplified version for icons/foreground)
  * Uses getSkyGradientColors to ensure consistency with calculated colors
  * @param {number} hour - Hour as float (0-24)
+ * @param {Object|null} skyGradientParams - Optional parameters for calcIdealClearSkyGradient
  * @returns {string} Hex color string for top of sky
  */
-export const getSkyTopColor = (hour) => {
-    const { topColor } = getSkyGradientColors(hour);
+export const getSkyTopColor = (hour, skyGradientParams = null) => {
+    const { topColor } = getSkyGradientColors(hour, skyGradientParams);
     return topColor;
 };
 
 /**
  * Get sky colors (top, mid, bottom) for gradient
  * @param {number} hour - Hour as float (0-24)
+ * @param {Object|null} skyGradientParams - Optional parameters for calcIdealClearSkyGradient
  * @returns {Object} { topColor, midColor, bottomColor, useMidColor }
  */
-export const getSkyGradientColors = (hour) => {
+export const getSkyGradientColors = (hour, skyGradientParams = null) => {
     const { night, sunrise, day, sunset } = SKY_COLORS;
 
     let topColor, bottomColor, midColor = null;
     let useMidColor = false;
 
-    const { topColorHex, midColorHex, bottomColorHex } = calcIdealClearSkyGradient({
-        solarAltitudeDeg: 0,
+    // Default parameters
+    const defaultParams = {
+        solarAltitudeDeg: 0.2,
         highCloudCoverage: 0.7,
-        aerosolConcentration: 0.15,
+        aerosolConcentration: 0.2,
         relativeHumidity: 0.4,
-        isAfterRain: false,
-        hasVolcanicAerosol: false
-    });
+        isAfterRain: true,
+        hasVolcanicAerosol: true,
+    };
+
+    // Use provided params or defaults
+    const params = skyGradientParams || defaultParams;
+
+    const { topColorHex, midColorHex, bottomColorHex } = calcIdealClearSkyGradient(params);
 
 
     if (hour >= 0 && hour < 5) {

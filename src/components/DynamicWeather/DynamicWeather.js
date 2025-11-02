@@ -257,20 +257,22 @@ const preLoadImageAssets = (callback, cleanupRef = null) => {
   return cleanup;
 };
 
-const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
+const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientParams = null }) => {
   const canvasRef = useRef(null);
   const animateRef = useRef(null);
   const spawnFunctionsRef = useRef(null);
   const timeOverrideRef = useRef(timeOverride);
+  const skyGradientParamsRef = useRef(skyGradientParams);
   const animationFrameIdRef = useRef(null);
   const isMountedRef = useRef(true); // Track if component is mounted
   const imageCleanupRef = useRef(null); // Cleanup function for image loading
   const hasStartedAnimationRef = useRef(false); // Track if animation has been started
 
-  // Update timeOverride ref when prop changes
+  // Update timeOverride and skyGradientParams refs when props change
   useEffect(() => {
     timeOverrideRef.current = timeOverride;
-  }, [timeOverride]);
+    skyGradientParamsRef.current = skyGradientParams;
+  }, [timeOverride, skyGradientParams]);
 
   // Setup spawn functions
   const spawnLightning = () => {
@@ -501,11 +503,11 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
 
     // Spawn sky background
     const currentHourFloat = getCurrentHour(timeOverrideRef.current);
-    skyInstance = new Sky(canvas, context, currentHourFloat);
+    skyInstance = new Sky(canvas, context, currentHourFloat, skyGradientParamsRef.current);
     assets.push(skyInstance);
 
     // Spawn ocean at the bottom
-    oceanInstance = new Ocean(canvas, context, currentHourFloat);
+    oceanInstance = new Ocean(canvas, context, currentHourFloat, skyGradientParamsRef.current);
     assets.push(oceanInstance);
 
     // Spawn landmark (above ocean, right side)
@@ -617,10 +619,10 @@ const DynamicWeather = ({ data, width, height, timeOverride = null }) => {
 
       // Update sky and ocean hour for color changes (use float for smoother transitions)
       if (skyInstance) {
-        skyInstance.updateHour(currentHourFloat);
+        skyInstance.updateHour(currentHourFloat, skyGradientParamsRef.current);
       }
       if (oceanInstance) {
-        oceanInstance.updateHour(currentHourFloat);
+        oceanInstance.updateHour(currentHourFloat, skyGradientParamsRef.current);
       }
 
       // Draw sky background FIRST (sunset/sunrise/day/night)

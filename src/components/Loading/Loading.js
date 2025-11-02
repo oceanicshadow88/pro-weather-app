@@ -3,13 +3,13 @@ import { useEffect, useState } from 'react';
 import './Loading.css';
 import { getSkyTopColor, getCurrentHour } from '../../utils/skyColorsCalUtils';
 
-const Loading = ({ timeOverride = null }) => {
+const Loading = ({ timeOverride = null, skyGradientParams = null }) => {
   const [rippleColor, setRippleColor] = useState('#6B2AF1');
 
   useEffect(() => {
     const updateColor = () => {
       const hour = getCurrentHour(timeOverride);
-      const skyColor = getSkyTopColor(hour);
+      const skyColor = getSkyTopColor(hour, skyGradientParams);
       setRippleColor(skyColor);
     };
 
@@ -25,7 +25,7 @@ const Loading = ({ timeOverride = null }) => {
         clearInterval(interval);
       }
     };
-  }, [timeOverride]);
+  }, [timeOverride, skyGradientParams]);
 
   return (
     <div className="loading-container">

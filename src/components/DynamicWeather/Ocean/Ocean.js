@@ -4,10 +4,11 @@ class Ocean {
     // Ocean height as percentage of canvas height
     static OCEAN_HEIGHT_PERCENTAGE = 0.2; // 40%
 
-    constructor(canvas, context, hour) {
+    constructor(canvas, context, hour, skyGradientParams = null) {
         this.canvas = canvas;
         this.context = context;
         this.hour = hour;
+        this.skyGradientParams = skyGradientParams;
 
         // Ocean takes up bottom portion of canvas
         this.oceanHeight = 0;
@@ -35,7 +36,7 @@ class Ocean {
     getOceanColors(hour) {
         // Use getSkyGradientColors to get colors that match the sky
         // Ocean colors are darker versions of sky colors for reflection effect
-        const { topColor: skyTopColor, bottomColor: skyBottomColor } = getSkyGradientColors(hour);
+        const { topColor: skyTopColor, bottomColor: skyBottomColor } = getSkyGradientColors(hour, this.skyGradientParams);
 
         // Darken sky colors for ocean reflection effect
         const darkenFactor = 0.4; // Make ocean 40% darker than sky
@@ -65,8 +66,11 @@ class Ocean {
         return { topColor, bottomColor, dashColor };
     }
 
-    updateHour(hour) {
+    updateHour(hour, skyGradientParams = null) {
         this.hour = hour;
+        if (skyGradientParams !== null) {
+            this.skyGradientParams = skyGradientParams;
+        }
     }
 
     // Update ocean dimensions - single source of truth for dimension calculation
