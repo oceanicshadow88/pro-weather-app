@@ -1,3 +1,5 @@
+import { getSkyGradientColors, hexToRgb } from '../../../utils/skyColorsCalUtils';
+
 class Ocean {
     // Ocean height as percentage of canvas height
     static OCEAN_HEIGHT_PERCENTAGE = 0.2; // 40%
@@ -31,93 +33,36 @@ class Ocean {
     }
 
     getOceanColors(hour) {
-        // Keep hour as float to allow smooth interpolation with minutes
-        // hour can be 5.5 (5:30 AM), 17.75 (5:45 PM), etc.
+        // Use getSkyGradientColors to get colors that match the sky
+        // Ocean colors are darker versions of sky colors for reflection effect
+        const { topColor: skyTopColor, bottomColor: skyBottomColor } = getSkyGradientColors(hour);
 
-        // Day colors (7-17) - bright blue ocean with gradient
-        const dayTop = '#4a90e2';
-        const dayBottom = '#2c5aa0';
-        const dayDash = '#6ba3e8';
+        // Darken sky colors for ocean reflection effect
+        const darkenFactor = 0.4; // Make ocean 40% darker than sky
 
-        // Night colors (19-24, 0-5) - dark blue ocean with gradient
-        const nightTop = '#19224c';  // Top color (rgb: 25, 34, 76)
-        const nightBottom = '#32508c'; // Bottom color (rgb: 50, 80, 140)
-        const nightDash = '#2a3f5f';
+        const rgbTop = hexToRgb(skyTopColor);
+        const rgbBottom = hexToRgb(skyBottomColor);
 
-        // Sunrise colors (5-7) - match sky's orange/pink, but darker for ocean reflection
-        const sunriseTop = '#cc5566';  // Darker version of sky's #ff6b6b
-        const sunriseBottom = '#993344';  // Darker version for depth
-        const sunriseDash = '#dd7788';
+        // Darken colors for ocean
+        const oceanTopR = Math.max(0, Math.round(rgbTop.r * (1 - darkenFactor)));
+        const oceanTopG = Math.max(0, Math.round(rgbTop.g * (1 - darkenFactor)));
+        const oceanTopB = Math.max(0, Math.round(rgbTop.b * (1 - darkenFactor)));
 
-        // Sunset colors (17-19) - match sky's orange/red, but darker for ocean reflection
-        const sunsetTop = '#cc5a3a';  // Darker version of sky's #ff7849
-        const sunsetBottom = '#993322';  // Darker version for depth
-        const sunsetDash = '#dd7a55';
+        const oceanBottomR = Math.max(0, Math.round(rgbBottom.r * (1 - darkenFactor)));
+        const oceanBottomG = Math.max(0, Math.round(rgbBottom.g * (1 - darkenFactor)));
+        const oceanBottomB = Math.max(0, Math.round(rgbBottom.b * (1 - darkenFactor)));
 
-        let topColor, bottomColor, dashColor;
+        // Convert to RGB strings for canvas
+        const topColor = `rgb(${oceanTopR}, ${oceanTopG}, ${oceanTopB})`;
+        const bottomColor = `rgb(${oceanBottomR}, ${oceanBottomG}, ${oceanBottomB})`;
 
-        if (hour >= 0 && hour < 5) {
-            // Night
-            topColor = nightTop;
-            bottomColor = nightBottom;
-            dashColor = nightDash;
-        } else if (hour >= 5 && hour < 6) {
-            // Early sunrise (5-6) - transition from night to sunrise colors
-            const progress = (hour - 5) / 1; // 0 to 1
-            topColor = this.interpolateColor(nightTop, sunriseTop, progress);
-            bottomColor = this.interpolateColor(nightBottom, sunriseBottom, progress);
-            dashColor = this.interpolateColor(nightDash, sunriseDash, progress);
-        } else if (hour >= 6 && hour < 7) {
-            // Late sunrise (6-7) - transition from sunrise to day colors
-            const progress = (hour - 6) / 1; // 0 to 1
-            topColor = this.interpolateColor(sunriseTop, dayTop, progress);
-            bottomColor = this.interpolateColor(sunriseBottom, dayBottom, progress);
-            dashColor = this.interpolateColor(sunriseDash, dayDash, progress);
-        } else if (hour >= 7 && hour < 17) {
-            // Day (7-17) - pure day colors
-            topColor = dayTop;
-            bottomColor = dayBottom;
-            dashColor = dayDash;
-        } else if (hour >= 17 && hour < 18) {
-            // Early sunset (17-18) - transition from day to sunset colors
-            const progress = (hour - 17) / 1; // 0 to 1
-            topColor = this.interpolateColor(dayTop, sunsetTop, progress);
-            bottomColor = this.interpolateColor(dayBottom, sunsetBottom, progress);
-            dashColor = this.interpolateColor(dayDash, sunsetDash, progress);
-        } else if (hour >= 18 && hour < 19) {
-            // Late sunset (18-19) - transition from sunset to night colors
-            const progress = (hour - 18) / 1; // 0 to 1
-            topColor = this.interpolateColor(sunsetTop, nightTop, progress);
-            bottomColor = this.interpolateColor(sunsetBottom, nightBottom, progress);
-            dashColor = this.interpolateColor(sunsetDash, nightDash, progress);
-        } else {
-            // Night (19-24)
-            topColor = nightTop;
-            bottomColor = nightBottom;
-            dashColor = nightDash;
-        }
+        // Dash color is a slightly lighter version of top color
+        const dashR = Math.min(255, oceanTopR + 30);
+        const dashG = Math.min(255, oceanTopG + 30);
+        const dashB = Math.min(255, oceanTopB + 30);
+        const dashColor = `rgb(${dashR}, ${dashG}, ${dashB})`;
 
         return { topColor, bottomColor, dashColor };
-    }
-
-    interpolateColor(color1, color2, factor) {
-        const c1 = this.hexToRgb(color1);
-        const c2 = this.hexToRgb(color2);
-
-        const r = Math.round(c1.r + (c2.r - c1.r) * factor);
-        const g = Math.round(c1.g + (c2.g - c1.g) * factor);
-        const b = Math.round(c1.b + (c2.b - c1.b) * factor);
-
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-
-    hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16),
-        } : { r: 0, g: 0, b: 0 };
     }
 
     updateHour(hour) {

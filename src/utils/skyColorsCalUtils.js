@@ -2,6 +2,7 @@
  * Shared utility functions for sky color calculations
  * Used by Sky.js, BackGround.js, Forecast.js, and ForecastItem.js
  */
+import { calcIdealClearSkyGradient } from './sunsetAndRiseUtils';
 
 /**
  * Convert hex color to RGB object
@@ -81,31 +82,13 @@ export const SKY_COLORS = {
 
 /**
  * Get sky top color based on hour (simplified version for icons/foreground)
+ * Uses getSkyGradientColors to ensure consistency with calculated colors
  * @param {number} hour - Hour as float (0-24)
  * @returns {string} Hex color string for top of sky
  */
 export const getSkyTopColor = (hour) => {
-    const { night, sunrise, day, sunset } = SKY_COLORS;
-
-    if (hour >= 0 && hour < 5) {
-        return night.top;
-    } else if (hour >= 5 && hour < 6) {
-        const progress = (hour - 5) / 1;
-        return interpolateColor(night.top, sunrise.top, progress);
-    } else if (hour >= 6 && hour < 7) {
-        const progress = (hour - 6) / 1;
-        return interpolateColor(sunrise.top, day.top, progress);
-    } else if (hour >= 7 && hour < 17) {
-        return day.top;
-    } else if (hour >= 17 && hour < 18) {
-        const progress = (hour - 17) / 1;
-        return interpolateColor(day.top, sunset.top, progress);
-    } else if (hour >= 18 && hour < 19) {
-        const progress = (hour - 18) / 1;
-        return interpolateColor(sunset.top, night.top, progress);
-    } else {
-        return night.top;
-    }
+    const { topColor } = getSkyGradientColors(hour);
+    return topColor;
 };
 
 /**
@@ -119,6 +102,16 @@ export const getSkyGradientColors = (hour) => {
     let topColor, bottomColor, midColor = null;
     let useMidColor = false;
 
+    const { topColorHex, midColorHex, bottomColorHex } = calcIdealClearSkyGradient({
+        solarAltitudeDeg: 0,
+        highCloudCoverage: 0.7,
+        aerosolConcentration: 0.15,
+        relativeHumidity: 0.4,
+        isAfterRain: false,
+        hasVolcanicAerosol: false
+    });
+
+
     if (hour >= 0 && hour < 5) {
         // Night (0-5) - use three-color gradient
         topColor = night.top;
@@ -128,16 +121,17 @@ export const getSkyGradientColors = (hour) => {
     } else if (hour >= 5 && hour < 6) {
         // Early sunrise (5-6) - transition from night to sunrise colors
         const progress = (hour - 5) / 1;
-        topColor = interpolateColor(night.top, sunrise.top, progress);
-        midColor = interpolateColor(night.mid, sunrise.mid, progress);
-        bottomColor = interpolateColor(night.bottom, sunrise.bottom, progress);
+
+        topColor = interpolateColor(night.top, topColorHex, progress);
+        midColor = interpolateColor(night.mid, midColorHex, progress);
+        bottomColor = interpolateColor(night.bottom, bottomColorHex, progress);
         useMidColor = true;
     } else if (hour >= 6 && hour < 7) {
         // Late sunrise (6-7) - transition from sunrise to day colors
         const progress = (hour - 6) / 1;
-        topColor = interpolateColor(sunrise.top, day.top, progress);
-        midColor = interpolateColor(sunrise.mid, day.top, progress); // Blend mid to day
-        bottomColor = interpolateColor(sunrise.bottom, day.bottom, progress);
+        topColor = interpolateColor(topColorHex, day.top, progress);
+        midColor = interpolateColor(midColorHex, day.top, progress); // Blend mid to day
+        bottomColor = interpolateColor(bottomColorHex, day.bottom, progress);
         useMidColor = progress < 0.5; // Use mid color only in first half of transition
     } else if (hour >= 7 && hour < 17) {
         // Day (7-17) - pure day colors
@@ -146,16 +140,16 @@ export const getSkyGradientColors = (hour) => {
     } else if (hour >= 17 && hour < 18) {
         // Early sunset (17-18) - transition from day to sunset colors
         const progress = (hour - 17) / 1;
-        topColor = interpolateColor(day.top, sunset.top, progress);
-        midColor = interpolateColor(day.bottom, sunset.mid, progress);
-        bottomColor = interpolateColor(day.bottom, sunset.bottom, progress);
+        topColor = interpolateColor(day.top, topColorHex, progress);
+        midColor = interpolateColor(day.bottom, midColorHex, progress);
+        bottomColor = interpolateColor(day.bottom, bottomColorHex, progress);
         useMidColor = true;
     } else if (hour >= 18 && hour < 19) {
         // Late sunset (18-19) - transition from sunset to night colors
         const progress = (hour - 18) / 1;
-        topColor = interpolateColor(sunset.top, night.top, progress);
-        midColor = interpolateColor(sunset.mid, night.mid, progress);
-        bottomColor = interpolateColor(sunset.bottom, night.bottom, progress);
+        topColor = interpolateColor(topColorHex, night.top, progress);
+        midColor = interpolateColor(midColorHex, night.mid, progress);
+        bottomColor = interpolateColor(bottomColorHex, night.bottom, progress);
         useMidColor = true;
     } else {
         // Night (19-24) - use three-color gradient
