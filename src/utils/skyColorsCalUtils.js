@@ -106,7 +106,7 @@ export const getSkyGradientColors = (hour, skyGradientParams = null) => {
 
     // Default parameters
     const defaultParams = {
-        solarAltitudeDeg: 0.2,
+        solarAltitudeDeg: 0, // 0 = sunset/sunrise (horizon), -6 to 0 = twilight range
         highCloudCoverage: 0.7,
         aerosolConcentration: 0.2,
         relativeHumidity: 0.4,

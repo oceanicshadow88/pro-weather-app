@@ -362,9 +362,9 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
     const airplane = new Airplane(canvas, context);
     assets.push(airplane);
 
-    // Schedule next airplane in 15 seconds (15000ms, not 150000ms)
+    // Schedule next airplane in 150 seconds (150000ms)
     if (isMountedRef.current) {
-      timers.airplane = setTimeout(spawnAirplane, 15000);
+      timers.airplane = setTimeout(spawnAirplane, 150000);
     }
   };
 

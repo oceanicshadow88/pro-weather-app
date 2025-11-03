@@ -55,13 +55,26 @@ function adjustHexBrightness(hexColor, brightnessFactorNegToPos) {
 }
 
 function calcTwilightFactor(solarAltitudeDeg) {
+    // Twilight is maximum when sun is at horizon (solarAltitudeDeg = 0)
+    // For sunset/sunrise conditions, solarAltitudeDeg should be around 0 to -6
+    // When solarAltitudeDeg = 0: twilightFactor = 1.0 (maximum)
+    // When solarAltitudeDeg = -6: twilightFactor = 0.0 (minimal twilight)
+    // When solarAltitudeDeg > 0: twilightFactor decreases as sun rises
     const raw = 1 - Math.abs(solarAltitudeDeg) / CIVIL_TWILIGHT_BOUNDARY_DEG;
     return clampToUnit(raw);
 }
 
 function calcLowSunFactor(solarAltitudeDeg) {
+    // LowSunFactor is maximum when sun is at horizon (solarAltitudeDeg ≈ 0)
+    // This factor determines red intensity - should be high for sunset/sunrise
+    // Clamp to range [-6, 6] degrees
     const clamped = Math.max(-CIVIL_TWILIGHT_BOUNDARY_DEG, Math.min(CIVIL_TWILIGHT_BOUNDARY_DEG, solarAltitudeDeg));
-    const raw = (CIVIL_TWILIGHT_BOUNDARY_DEG - clamped) / TWILIGHT_SMOOTH_RANGE_DEG;
+    // When clamped = 0: factor = 6/12 = 0.5 (should be higher)
+    // When clamped = -6: factor = 12/12 = 1.0 (good)
+    // When clamped = 6: factor = 0/12 = 0.0 (good)
+    // For sunset (clamped ≈ 0), we want factor ≈ 1.0
+    // Use: factor = (6 - abs(clamped)) / 12, but inverted so 0 gives 1.0
+    const raw = 1 - (Math.abs(clamped) / CIVIL_TWILIGHT_BOUNDARY_DEG);
     return clampToUnit(raw);
 }
 
@@ -71,7 +84,12 @@ export function getSkyGradientByFactors({
     blueRatio,
     purpleMixFactor,
     twilightFactor,
-    colorMuteStrength
+    colorMuteStrength,
+    // Add additional context about atmospheric conditions
+    highCloudCoverage,
+    aerosolConcentration,
+    relativeHumidity,
+    hasVolcanicAerosol
 }) {
     let topColorHex, midColorHex, bottomColorHex;
 
@@ -81,41 +99,70 @@ export function getSkyGradientByFactors({
         midColorHex = "#B6B9BC";
         bottomColorHex = "#D0D3D6";
     }
-    else if (purpleMixFactor > 0.75 && twilightFactor > 0.6) {
-        // 🌌 Vivid purple
-        topColorHex = "#7B3FFF";
-        midColorHex = "#A042FF";
-        bottomColorHex = "#D14EFF";
+    // Clear blue sky: minimal clouds, aerosols, humidity (everything near 0)
+    // In real world: clear conditions = blue sky, not purple
+    else if ((highCloudCoverage || 0) < 0.1 && (aerosolConcentration || 0) < 0.1 && (relativeHumidity || 0) < 0.2) {
+        // 🌤 Clear Blue Sky - minimal atmospheric conditions
+        topColorHex = "#6FB8FF";
+        midColorHex = "#A8C9FF";
+        bottomColorHex = "#D3E2FF";
     }
-    else if (purpleMixFactor > 0.5 && twilightFactor > 0.4) {
-        // 💜 Magenta or Purple Tint
-        topColorHex = "#9541FF";
-        midColorHex = "#D55AFF";
-        bottomColorHex = "#FF6FA5";
-    }
-    else if (redLightStrength > 0.65 && blueRatio < 0.35) {
-        // 🌇 Red or Orange Sunset
+    // Check for orange/red sunset - red significantly higher than blue
+    else if (redLightStrength > 0.65 && blueRatio < 0.35 && redLightStrength > blueLightStrength * 1.3) {
+        // 🌇 橙红日落 (Red / Orange Sunset) - 高云≈0.05, 气溶胶≈0.55, 湿度≈0.8, 非雨后
+        // Low cloud + high aerosol + high humidity + no rain = orange/red sunset
         topColorHex = "#FF8C42";   // bright orange
         midColorHex = "#FF6230";   // orange-red core
         bottomColorHex = "#FF3B1F"; // deep red
     }
-    else if (blueLightStrength > 0.65 && blueRatio > 0.6) {
-        // 💙 Blue or Violet Twilight
+    // Blue/Violet Twilight: high cloud coverage + low aerosol + after rain + no volcanic
+    // Check BEFORE purple to prioritize blue twilight when conditions match
+    // Blue should dominate (blueRatio > 0.45) but not too high, and need specific atmospheric conditions
+    else if (blueLightStrength > 0.65 && blueRatio > 0.45 &&
+        (highCloudCoverage || 0) > 0.6 &&
+        (aerosolConcentration || 0) < 0.2 &&
+        !(hasVolcanicAerosol || false)) {
+        // 💙 蓝紫暮光 (Blue / Violet Twilight) - 高云≈0.7, 气溶胶≈0.1, 湿度≈0.3, 雨后, 无火山灰
         topColorHex = "#4A6BFF";
         midColorHex = "#5E7EFF";
         bottomColorHex = "#8B9FFF";
     }
-    else if (redLightStrength > blueLightStrength) {
-        // 🌸 Warm Peach or Pink
+    // Purple requires specific atmospheric conditions: high clouds AND (volcanic aerosol OR high humidity)
+    // Purple is NOT just balanced red/blue - it needs actual atmospheric mixing factors
+    // Note: Purple check comes after blue twilight to avoid conflicts
+    else if (purpleMixFactor > 0.5 && twilightFactor > 0.6 &&
+        Math.abs(redLightStrength - blueLightStrength) < 0.3 &&
+        ((highCloudCoverage || 0) > 0.4 || (hasVolcanicAerosol || false))) {
+        // 🌌 浓烈紫色 (Vivid Purple) - needs high cloud OR volcanic aerosol
+        // High cloud + volcanic aerosol + high twilight = vivid purple
+        if (purpleMixFactor > 0.7 && ((highCloudCoverage || 0) > 0.6 || (hasVolcanicAerosol || false))) {
+            topColorHex = "#7B3FFF";
+            midColorHex = "#A042FF";
+            bottomColorHex = "#D14EFF";
+        } else {
+            // 💜 粉紫暮光 (Magenta / Purple Tint)
+            topColorHex = "#9541FF";
+            midColorHex = "#D55AFF";
+            bottomColorHex = "#FF6FA5";
+        }
+    }
+    // Warm Peach/Pink: moderate conditions with red higher than blue
+    // Requires high humidity (for warm tones) and moderate cloud/aerosol
+    else if (redLightStrength > blueLightStrength &&
+        redLightStrength > 0.5 &&
+        (relativeHumidity || 0) > 0.6 &&
+        (highCloudCoverage || 0) < 0.4 &&
+        !(hasVolcanicAerosol || false)) {
+        // 🌸 粉橙 (Warm Peach / Pink) - 高云≈0.2, 气溶胶≈0.4, 湿度≈0.7
         topColorHex = "#FFB27A";
         midColorHex = "#FF8A85";
         bottomColorHex = "#FF6C75";
     }
     else {
-        // 🌤 Cool Blue Tint (default)
+        // 🌤 中性暮光 (Neutral Twilight) - 中等云 ≈0.3, 气溶胶≈0.4, 湿度≈0.5
         topColorHex = "#6FB8FF";
-        midColorHex = "#A8C9FF";
-        bottomColorHex = "#D3E2FF";
+        midColorHex = "#FFA34D";
+        bottomColorHex = "#FF3B2E";
     }
 
     return { topColorHex, midColorHex, bottomColorHex };
@@ -174,7 +221,10 @@ export function calcIdealClearSkyGradient(input) {
 
     const totalIntensity = redIntensity + blueIntensity + 1e-6;
     const blueRatio = clampToUnit(blueIntensity / totalIntensity);
-    const purpleMixFactor = Math.min(redIntensity, blueIntensity) * 2;
+    // Purple mix requires balanced red and blue intensities AND volcanic aerosol/high cloud
+    // Reduce multiplier and add conditions to make it more selective
+    // Purple typically needs: high cloud (scatters blue) + volcanic (adds red) + twilight
+    const purpleMixFactor = Math.min(redIntensity, blueIntensity);
 
 
     return getSkyGradientByFactors({
@@ -183,6 +233,11 @@ export function calcIdealClearSkyGradient(input) {
         blueRatio: blueRatio,
         purpleMixFactor: purpleMixFactor,
         twilightFactor: twilightFactor,
-        colorMuteStrength: 0
+        colorMuteStrength: 0,
+        // Pass atmospheric conditions for better color matching
+        highCloudCoverage: highCloudCoverage,
+        aerosolConcentration: aerosolConcentration,
+        relativeHumidity: relativeHumidity,
+        hasVolcanicAerosol: hasVolcanicAerosol
     });
 }
