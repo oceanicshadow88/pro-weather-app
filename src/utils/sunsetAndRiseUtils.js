@@ -65,6 +65,62 @@ function calcLowSunFactor(solarAltitudeDeg) {
     return clampToUnit(raw);
 }
 
+export function getSkyGradientByFactors({
+    redLightStrength,
+    blueLightStrength,
+    blueRatio,
+    purpleMixFactor,
+    twilightFactor,
+    colorMuteStrength
+}) {
+    let topColorHex, midColorHex, bottomColorHex;
+
+    if (colorMuteStrength > 0.65) {
+        // ☁️ Muted grey overcast
+        topColorHex = "#A0A3A8";
+        midColorHex = "#B6B9BC";
+        bottomColorHex = "#D0D3D6";
+    }
+    else if (purpleMixFactor > 0.75 && twilightFactor > 0.6) {
+        // 🌌 Vivid purple
+        topColorHex = "#7B3FFF";
+        midColorHex = "#A042FF";
+        bottomColorHex = "#D14EFF";
+    }
+    else if (purpleMixFactor > 0.5 && twilightFactor > 0.4) {
+        // 💜 Magenta or Purple Tint
+        topColorHex = "#9541FF";
+        midColorHex = "#D55AFF";
+        bottomColorHex = "#FF6FA5";
+    }
+    else if (redLightStrength > 0.65 && blueRatio < 0.35) {
+        // 🌇 Red or Orange Sunset
+        topColorHex = "#FF8C42";   // bright orange
+        midColorHex = "#FF6230";   // orange-red core
+        bottomColorHex = "#FF3B1F"; // deep red
+    }
+    else if (blueLightStrength > 0.65 && blueRatio > 0.6) {
+        // 💙 Blue or Violet Twilight
+        topColorHex = "#4A6BFF";
+        midColorHex = "#5E7EFF";
+        bottomColorHex = "#8B9FFF";
+    }
+    else if (redLightStrength > blueLightStrength) {
+        // 🌸 Warm Peach or Pink
+        topColorHex = "#FFB27A";
+        midColorHex = "#FF8A85";
+        bottomColorHex = "#FF6C75";
+    }
+    else {
+        // 🌤 Cool Blue Tint (default)
+        topColorHex = "#6FB8FF";
+        midColorHex = "#A8C9FF";
+        bottomColorHex = "#D3E2FF";
+    }
+
+    return { topColorHex, midColorHex, bottomColorHex };
+}
+
 
 export function calcIdealClearSkyGradient(input) {
     const {
@@ -118,23 +174,15 @@ export function calcIdealClearSkyGradient(input) {
 
     const totalIntensity = redIntensity + blueIntensity + 1e-6;
     const blueRatio = clampToUnit(blueIntensity / totalIntensity);
+    const purpleMixFactor = Math.min(redIntensity, blueIntensity) * 2;
 
-    const bottomWarmCoolMix = clampToUnit(0.15 + 0.35 * twilightFactor);
-    let bottomColorHex = mixHexColors(warmBase, coolBase, bottomWarmCoolMix);
-    bottomColorHex = adjustHexBrightness(bottomColorHex, -0.06); // slightly darker near horizon
 
-    // Middle: balanced red & blue → use overall blend, slightly brighter
-    const blendedBase = mixHexColors(warmBase, coolBase, blueRatio);
-    let midColorHex = adjustHexBrightness(blendedBase, +0.05);
-
-    // Top: upper sky → cooler; shifts toward indigo as twilight grows, slightly brightened
-    const topCoolShiftRatio = clampToUnit(0.4 + 0.6 * twilightFactor);
-    let topColorHex = mixHexColors(COOL_COLOR_START_HEX, COOL_COLOR_END_HEX, topCoolShiftRatio);
-    topColorHex = adjustHexBrightness(topColorHex, +0.10);
-
-    return {
-        topColorHex,
-        midColorHex,
-        bottomColorHex
-    };
+    return getSkyGradientByFactors({
+        redLightStrength: redIntensity,
+        blueLightStrength: blueIntensity,
+        blueRatio: blueRatio,
+        purpleMixFactor: purpleMixFactor,
+        twilightFactor: twilightFactor,
+        colorMuteStrength: 0
+    });
 }

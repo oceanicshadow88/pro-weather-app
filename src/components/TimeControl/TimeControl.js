@@ -9,12 +9,12 @@ class TimeControl extends React.Component {
             minute: new Date().getMinutes(),
             enabled: false,
             skyGradientParams: {
-                solarAltitudeDeg: 0,
-                highCloudCoverage: 0,
-                aerosolConcentration: 0,
-                relativeHumidity: 0,
-                isAfterRain: false,
-                hasVolcanicAerosol: false,
+                solarAltitudeDeg: 0.2,
+                highCloudCoverage: 0.7,
+                aerosolConcentration: 0.2,
+                relativeHumidity: 0.4,
+                isAfterRain: true,
+                hasVolcanicAerosol: true,   // Disable to avoid purple tint from volcanic aerosols
             },
         };
     }
