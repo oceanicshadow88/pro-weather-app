@@ -14,6 +14,7 @@ import Ocean from './Ocean/Ocean';
 import Sky from './Sky/Sky';
 import Airplane from './Airplane/Airplane';
 import Landmark from './Landmark/Landmark';
+import { useSkyGradient } from '../../context/SkyGradientContext';
 
 const assets = [];
 
@@ -257,7 +258,8 @@ const preLoadImageAssets = (callback, cleanupRef = null) => {
   return cleanup;
 };
 
-const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientParams = null }) => {
+const DynamicWeather = ({ data, width, height }) => {
+  const { timeOverride, skyGradientParams } = useSkyGradient();
   const canvasRef = useRef(null);
   const animateRef = useRef(null);
   const spawnFunctionsRef = useRef(null);
@@ -268,7 +270,7 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
   const imageCleanupRef = useRef(null); // Cleanup function for image loading
   const hasStartedAnimationRef = useRef(false); // Track if animation has been started
 
-  // Update timeOverride and skyGradientParams refs when props change
+  // Update timeOverride and skyGradientParams refs when context changes
   useEffect(() => {
     timeOverrideRef.current = timeOverride;
     skyGradientParamsRef.current = skyGradientParams;
@@ -331,7 +333,6 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
     const cloud1X = -canvas.width * 0.2;
     const cloud2X = canvas.width * 0.3;
     const cloud3X = canvas.width * 0.7;
-
 
     const offset = 50
     // Position clouds in upper portion of canvas (top 15-25% area)

@@ -14,7 +14,7 @@ const TodayWeatherCard = (props) => {
         }
     };
 
-    const { data, timeOverride, skyGradientParams } = props;
+    const { data } = props;
 
     return (
         <section className="card__current" ref={getHeight}>
@@ -22,8 +22,6 @@ const TodayWeatherCard = (props) => {
                 data={data}
                 height={parseInt(elementHeight, 10)}
                 width={parseInt(elementWidth, 10)}
-                timeOverride={timeOverride}
-                skyGradientParams={skyGradientParams}
             />
             <div className="card__current-temperature">
                 <div className="center">

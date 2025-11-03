@@ -1,5 +1,6 @@
 import React from 'react';
 import './TimeControl.css';
+import { useSkyGradient } from '../../context/SkyGradientContext';
 
 class TimeControl extends React.Component {
     constructor(props) {
@@ -19,10 +20,17 @@ class TimeControl extends React.Component {
         };
     }
 
+    static getDerivedStateFromProps(props, state) {
+        // Update local state from context if needed
+        return null;
+    }
+
     componentDidMount() {
-        // Initialize with current time
-        if (this.props.onTimeChange) {
-            this.props.onTimeChange(null, this.state.skyGradientParams); // Start with null (real time)
+        // Initialize with current time and default params
+        const { setTimeOverride, setSkyGradientParams } = this.props.skyGradientContext;
+        if (setTimeOverride && setSkyGradientParams) {
+            setTimeOverride(null); // Start with null (real time)
+            setSkyGradientParams(this.state.skyGradientParams);
         }
     }
 
@@ -66,11 +74,14 @@ class TimeControl extends React.Component {
     };
 
     updateTime = (hour, minute, enabled, skyGradientParams) => {
-        if (this.props.onTimeChange) {
+        const { setTimeOverride, setSkyGradientParams } = this.props.skyGradientContext;
+        if (setTimeOverride && setSkyGradientParams) {
+            // Update context with new values
+            setSkyGradientParams(skyGradientParams || this.state.skyGradientParams);
             if (enabled) {
-                this.props.onTimeChange({ hour, minute }, skyGradientParams || this.state.skyGradientParams);
+                setTimeOverride({ hour, minute });
             } else {
-                this.props.onTimeChange(null, skyGradientParams || this.state.skyGradientParams); // null means use real time
+                setTimeOverride(null); // null means use real time
             }
         }
     };
@@ -216,5 +227,11 @@ class TimeControl extends React.Component {
     }
 }
 
-export default TimeControl;
+// Wrapper component to inject context into class component
+const TimeControlWithContext = () => {
+    const skyGradientContext = useSkyGradient();
+    return <TimeControl skyGradientContext={skyGradientContext} />;
+};
+
+export default TimeControlWithContext;
 

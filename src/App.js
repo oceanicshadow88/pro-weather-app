@@ -14,6 +14,7 @@ import ResetPage from './pages/ResetPage/ResetPage';
 import ProtectedRoute from './routes/ProtectedRoute/ProtectedRoute';
 import ForgotPage from './pages/ForgotPage/ForgotPage';
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage';
+import { SkyGradientProvider } from './context/SkyGradientContext';
 
 const App = ({ onTryAutoSignup }) => {
   // https://rawgit.com/darkskyapp/skycons/master/skycons.js
@@ -24,17 +25,19 @@ const App = ({ onTryAutoSignup }) => {
   }, [onTryAutoSignup]);
 
   return (
-    <Switch>
-      <Route path="/" exact component={LoginPage} />
-      <Route path="/reset-password/:token" exact component={ResetPage} />
-      <Route path="/forgot" exact component={ForgotPage} />
-      <Route path="/sign-up" exact component={SignUpPage} />
-      <Route path="/dashboard" exact component={DashboardPage} />
-      <Route path="/settings" exact component={SettingsPage} />
-      <Route path="/logout" exact component={Logout} />
-      <Route path="/login" component={LoginPage} />
-      <Route component={NotFoundPage} />
-    </Switch>
+    <SkyGradientProvider>
+      <Switch>
+        <Route path="/" exact component={LoginPage} />
+        <Route path="/reset-password/:token" exact component={ResetPage} />
+        <Route path="/forgot" exact component={ForgotPage} />
+        <Route path="/sign-up" exact component={SignUpPage} />
+        <Route path="/dashboard" exact component={DashboardPage} />
+        <Route path="/settings" exact component={SettingsPage} />
+        <Route path="/logout" exact component={Logout} />
+        <Route path="/login" component={LoginPage} />
+        <Route component={NotFoundPage} />
+      </Switch>
+    </SkyGradientProvider>
   );
 };
 

@@ -32,7 +32,7 @@ class Twitter extends React.Component {
         </div>
         <div className="card__post-container">
           {!this.state.isLoaded ? (
-            <Loading timeOverride={this.props.timeOverride} />
+            <Loading />
           ) : (
             this.state.data.statuses.slice(0, 10).map((status, id) => (
               <div className="card__social-media-post" key={id}>

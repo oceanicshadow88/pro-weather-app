@@ -9,14 +9,14 @@ import '../../App.css';
 import { connect } from 'react-redux';
 import { getWeather, convertWeatherData } from '../../api/weatherapi';
 import LoaderWeather from '../../components/LoaderWeather/LoaderWeather';
+import { useSkyGradient } from '../../context/SkyGradientContext';
 
 const DashboardPage = (props) => {
     const [isLoaded, setIsLoaded] = useState(false);
     const [data, setData] = useState([]);
     const [error, setError] = useState(false);
     const [searchKey, setSearchKey] = useState('sydney');
-    const [timeOverride, setTimeOverride] = useState(null);
-    const [skyGradientParams, setSkyGradientParams] = useState(null);
+    const { timeOverride, skyGradientParams, setTimeOverride, setSkyGradientParams } = useSkyGradient();
 
     const loadDefaultData = async () => {
         try {
@@ -65,18 +65,13 @@ const DashboardPage = (props) => {
             data={data}
             isLoaded={isLoaded}
             searchKey={searchKey}
-            timeOverride={timeOverride}
-            skyGradientParams={skyGradientParams}
         />
     );
 
     return (
         <div className="DashboardPage">
             <Header searchPressCallback={handleSearchPress} />
-            <TimeControl onTimeChange={(timeOverride, skyGradientParams) => {
-                setTimeOverride(timeOverride);
-                setSkyGradientParams(skyGradientParams);
-            }} />
+            <TimeControl />
             {!isLoaded ? (
                 <div className="loading--fixed">
                     <LoaderWeather />
@@ -84,7 +79,7 @@ const DashboardPage = (props) => {
             ) : (
                 showCard
             )}
-            <BackGround timeOverride={timeOverride} skyGradientParams={skyGradientParams} />
+            <BackGround />
         </div>
     );
 };

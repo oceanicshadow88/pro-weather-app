@@ -114,10 +114,10 @@ class Ocean {
         this.context.quadraticCurveTo(0, this.canvas.height, 0, this.canvas.height);
         this.context.closePath();
 
-        // Create gradient for ocean depth effect
+        // Create gradient for ocean depth effect (flipped - bottom color at top, top color at bottom)
         const gradient = this.context.createLinearGradient(0, this.y, 0, this.canvas.height);
-        gradient.addColorStop(0, topColor);
-        gradient.addColorStop(1, bottomColor);
+        gradient.addColorStop(0, bottomColor);
+        gradient.addColorStop(1, topColor);
 
         this.context.fillStyle = gradient;
         this.context.fill();

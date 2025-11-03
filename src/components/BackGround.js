@@ -4,8 +4,10 @@ import bot from '../img/wave-bot.png';
 import mid from '../img/wave-bot.png';
 import top from '../img/wave-bot.png';
 import { getSkyGradientColors, getCurrentHour } from '../utils/skyColorsCalUtils';
+import { useSkyGradient } from '../context/SkyGradientContext';
 
-function BackGround({ timeOverride = null, skyGradientParams = null }) {
+function BackGround() {
+  const { timeOverride, skyGradientParams } = useSkyGradient();
   const Background = bot;
   const Background2 = mid;
   const Background3 = top;

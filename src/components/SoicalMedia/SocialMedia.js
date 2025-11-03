@@ -19,8 +19,8 @@ class SocialMedia extends React.Component {
 
   render() {
     const socialMedia = [
-      <Twitter key="twitter" searchKey={this.props.searchKey} timeOverride={this.props.timeOverride} />,
-      <Facebook key="facebook" searchKey={this.props.searchKey} timeOverride={this.props.timeOverride} />,
+      <Twitter key="twitter" searchKey={this.props.searchKey} />,
+      <Facebook key="facebook" searchKey={this.props.searchKey} />,
     ];
     return (
       <section className="card__social-media">

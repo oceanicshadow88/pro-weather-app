@@ -93,6 +93,17 @@ export const getSkyTopColor = (hour, skyGradientParams = null) => {
 };
 
 /**
+ * Get bottom color of sky (horizon color)
+ * @param {number} hour - Hour as float (0-24)
+ * @param {Object|null} skyGradientParams - Optional parameters for calcIdealClearSkyGradient
+ * @returns {string} Hex color string for bottom of sky (horizon)
+ */
+export const getSkyBottomColor = (hour, skyGradientParams = null) => {
+    const { bottomColor } = getSkyGradientColors(hour, skyGradientParams);
+    return bottomColor;
+};
+
+/**
  * Get sky colors (top, mid, bottom) for gradient
  * @param {number} hour - Hour as float (0-24)
  * @param {Object|null} skyGradientParams - Optional parameters for calcIdealClearSkyGradient

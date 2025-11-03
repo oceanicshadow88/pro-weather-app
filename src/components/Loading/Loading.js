@@ -1,15 +1,17 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
 import './Loading.css';
-import { getSkyTopColor, getCurrentHour } from '../../utils/skyColorsCalUtils';
+import { getSkyBottomColor, getCurrentHour } from '../../utils/skyColorsCalUtils';
+import { useSkyGradient } from '../../context/SkyGradientContext';
 
-const Loading = ({ timeOverride = null, skyGradientParams = null }) => {
+const Loading = () => {
+  const { timeOverride, skyGradientParams } = useSkyGradient();
   const [rippleColor, setRippleColor] = useState('#6B2AF1');
 
   useEffect(() => {
     const updateColor = () => {
       const hour = getCurrentHour(timeOverride);
-      const skyColor = getSkyTopColor(hour, skyGradientParams);
+      const skyColor = getSkyBottomColor(hour, skyGradientParams);
       setRippleColor(skyColor);
     };
 

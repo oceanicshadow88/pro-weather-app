@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactAnimatedWeather from 'react-animated-weather';
 import moment from 'moment';
-import { getSkyTopColor, darkenColor, getCurrentHour } from '../../utils/skyColorsCalUtils';
+import { darkenColor } from '../../utils/skyColorsCalUtils';
 
 const weatherMapping = {
   'clear-day': 'CLEAR_DAY',
@@ -24,10 +24,10 @@ const dayMapping = {
 };
 
 const ForecastItem = (props) => {
-  const { data, skyColor, skyGradientParams } = props;
+  const { data, skyColor } = props;
 
-  // Use provided skyColor or calculate from current time
-  const baseSkyColor = skyColor || getSkyTopColor(getCurrentHour(null), skyGradientParams);
+  // Use provided skyColor (calculated in Forecast component)
+  const baseSkyColor = skyColor || '#6FB8FF'; // fallback color
 
   // Darken slightly for better visibility (15% darker)
   const iconColor = darkenColor(baseSkyColor, 0.15);
