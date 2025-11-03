@@ -24,7 +24,7 @@ class Landmark {
         this.updatePosition();
 
         // Image load handler
-        this.img.onload = () => {
+        this._onloadHandler = () => {
             // Get actual image dimensions
             this.baseWidth = this.img.naturalWidth;
             this.baseHeight = this.img.naturalHeight;
@@ -44,6 +44,7 @@ class Landmark {
             // Recalculate position with actual dimensions
             this.updatePosition();
         };
+        this.img.onload = this._onloadHandler;
     }
 
     updatePosition() {
@@ -114,6 +115,14 @@ class Landmark {
         this.context.restore();
 
         return true; // Keep drawing
+    }
+
+    // Cleanup method to remove image handlers
+    cleanup() {
+        if (this.img && this._onloadHandler) {
+            this.img.onload = null;
+            this._onloadHandler = null;
+        }
     }
 }
 

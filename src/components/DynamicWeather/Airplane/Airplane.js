@@ -68,6 +68,9 @@ class Airplane {
             this.startX = -this.width;
             this.x = this.startX;
         };
+
+        // Store reference for cleanup
+        this._onloadHandler = this.img.onload;
     }
 
     draw() {
@@ -113,6 +116,14 @@ class Airplane {
         if (newCanvas) {
             this.canvas = newCanvas;
             this.context = newCanvas.getContext('2d');
+        }
+    }
+
+    // Cleanup method to remove image handlers
+    cleanup() {
+        if (this.img && this._onloadHandler) {
+            this.img.onload = null;
+            this._onloadHandler = null;
         }
     }
 }

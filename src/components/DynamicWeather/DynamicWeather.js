@@ -276,25 +276,51 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
 
   // Setup spawn functions
   const spawnLightning = () => {
+    if (!isMountedRef.current) return;
+
     const rand = randomRange(0, 10);
     if (rand > 7) {
       timers.secondFlash = setTimeout(() => {
-        assets.push(new Lightning(canvas, context));
+        if (isMountedRef.current && canvas && context) {
+          assets.push(new Lightning(canvas, context));
+        }
       }, 200);
     }
-    assets.push(new Lightning(canvas, context));
-    timers.lightning = setTimeout(spawnLightning, randomRange(500, 7000));
+    if (canvas && context) {
+      assets.push(new Lightning(canvas, context));
+    }
+    if (isMountedRef.current) {
+      timers.lightning = setTimeout(spawnLightning, randomRange(500, 7000));
+    }
   };
 
   const spawnRain = () => {
+    if (!isMountedRef.current || !canvas || !context) return;
+
     timers.rain = setInterval(() => {
-      assets.push(new Rain(canvas, context));
+      if (isMountedRef.current && canvas && context) {
+        assets.push(new Rain(canvas, context));
+      } else {
+        if (timers.rain) {
+          clearInterval(timers.rain);
+          delete timers.rain;
+        }
+      }
     }, 60);
   };
 
   const spawnSnow = () => {
+    if (!isMountedRef.current || !canvas || !context) return;
+
     timers.snow = setInterval(() => {
-      assets.push(new SnowFlake(canvas, context, 1));
+      if (isMountedRef.current && canvas && context) {
+        assets.push(new SnowFlake(canvas, context, 1));
+      } else {
+        if (timers.snow) {
+          clearInterval(timers.snow);
+          delete timers.snow;
+        }
+      }
     }, 250);
   };
 
@@ -319,21 +345,27 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
   };
 
   const spawnLeaves = () => {
+    if (!isMountedRef.current || !canvas || !context) return;
+
     for (let i = 0, n = randomRange(0, 3); i < n; i += 1) {
       assets.push(new BlowingLeaf(canvas, context, imageAssets, 1));
     }
-    timers.wind = setTimeout(spawnLeaves, randomRange(500, 1500));
+    if (isMountedRef.current) {
+      timers.wind = setTimeout(spawnLeaves, randomRange(500, 1500));
+    }
   };
 
   const spawnAirplane = () => {
-    if (!canvas || !context) return;
+    if (!canvas || !context || !isMountedRef.current) return;
 
     // Spawn airplane (flies from right to left, takes 10 seconds)
     const airplane = new Airplane(canvas, context);
     assets.push(airplane);
 
-    // Schedule next airplane in 15 seconds
-    timers.airplane = setTimeout(spawnAirplane, 150000);
+    // Schedule next airplane in 15 seconds (15000ms, not 150000ms)
+    if (isMountedRef.current) {
+      timers.airplane = setTimeout(spawnAirplane, 15000);
+    }
   };
 
   const spawnSun = () => {
@@ -663,6 +695,10 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
           continue;
         }
         if (!asset.draw()) {
+          // Cleanup image handlers before removing
+          if (asset && typeof asset.cleanup === 'function') {
+            asset.cleanup();
+          }
           assets.splice(i, 1);
           n -= 1;
           i -= 1;
@@ -720,7 +756,12 @@ const DynamicWeather = ({ data, width, height, timeOverride = null, skyGradientP
         delete timers[key];
       });
 
-      // Clear assets array completely
+      // Clear assets array completely - cleanup image handlers first
+      assets.forEach((asset) => {
+        if (asset && typeof asset.cleanup === 'function') {
+          asset.cleanup();
+        }
+      });
       assets.length = 0;
 
       // Reset all instance references

@@ -31,7 +31,7 @@ class Cloud {
     this.height = 50; // Temporary default, will update on load
 
     // Update dimensions when image loads
-    this.img.onload = () => {
+    this._onloadHandler = () => {
       this.baseWidth = 714 * 1.75;
       this.baseHeight = 213 * 1.75;
       // Calculate and store aspect ratio
@@ -39,6 +39,7 @@ class Cloud {
       // Calculate scaled dimensions maintaining aspect ratio
       this.calculateScaledDimensions();
     };
+    this.img.onload = this._onloadHandler;
 
     const max = 10;
     this.xVelocity = (windSpeed - randomRange(0, max)) / 60;
@@ -152,6 +153,14 @@ class Cloud {
 
     return true;
   };
+
+  // Cleanup method to remove image handlers
+  cleanup() {
+    if (this.img && this._onloadHandler) {
+      this.img.onload = null;
+      this._onloadHandler = null;
+    }
+  }
 }
 
 export default Cloud;
